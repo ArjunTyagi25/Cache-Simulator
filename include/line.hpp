@@ -2,6 +2,7 @@
 
 #include<cstdint>
 #include<vector>
+#include<optional>
 
 class line
 {
@@ -11,14 +12,15 @@ class line
         std::vector<u_int8_t> get_line_data();
         void write_byte(u_int8_t write_data_, size_t tag_, size_t offset_);
         void write_line(std::vector<u_int8_t> write_data_, size_t tag_);
-        size_t get_tag();
+        std::optional<size_t> get_tag();
+        void set_tag(std::optional<size_t> tag_);
         bool get_valid();
         bool get_dirty_bit();
-        void print_line_data();
+        void print_line_data(bool print_tag_);
 
     private:
         std::vector<u_int8_t> line_data;
-        size_t tag;
+        std::optional<size_t> tag;
         bool valid; 
         bool dirty;
         size_t line_size;

@@ -20,6 +20,7 @@ line::line(size_t line_size_, bool valid_, string init_)
         else if (init_ == "random")
             this->line_data.push_back(static_cast<uint8_t>(dist(generator)));
     }
+    this->tag = 0;
     this->valid = valid_;
     this->dirty = false;
 }
@@ -50,7 +51,12 @@ void line::write_line(vector<u_int8_t> write_data_, size_t tag_)
     this->dirty = true;
 }
 
-size_t line::get_tag()
+void line::set_tag(optional<size_t> tag_)
+{
+    this->tag = tag_;
+}
+
+optional<size_t> line::get_tag()
 {
     return this->tag;
 }
@@ -65,11 +71,22 @@ bool line::get_dirty_bit()
     return this->dirty;
 }
 
-void line::print_line_data()
+void line::print_line_data(bool print_tag_)
 {
-    cout << this->valid << "\t" << this->dirty << "\t" << this->tag << "\t";
-    for (size_t i = 0; i < this->line_size; i++)
+    if (print_tag_)
+    {   
+        cout << this->valid << "\t" << this->dirty << "\t" << this->tag.value() << "\t";
+        for (size_t i = 0; i < this->line_size; i++)
+        {
+            cout << hex << static_cast<int>(this->line_data[i]) << " ";
+        }
+    }
+    else
     {
-        cout << hex << static_cast<int>(this->line_data[i]) << " ";
+        cout << this->valid << "\t" << this->dirty << "\t" ;
+        for (size_t i = 0; i < this->line_size; i++)
+        {
+            cout << hex << static_cast<int>(this->line_data[i]) << " ";
+        }
     }
 }
