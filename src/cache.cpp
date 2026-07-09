@@ -1,20 +1,24 @@
 #include<iostream>
 #include<optional>
+#include<random>
+#include<stdexcept>
 #include<cache.hpp>
 
 using namespace std;
 
-cache::cache(size_t cache_size_, size_t line_size_, size_t assoc_)
+cache::cache(size_t cache_size_, size_t line_size_, size_t assoc_, string replacement_policy_)
 {
     this->cache_size = cache_size_;
     this->line_size = line_size_;
     this->assoc = assoc_;
+    this->replacement_policy = replacement_policy_;
     this->number_of_total_lines = this->cache_size/this->line_size;
     this->number_of_sets = this->number_of_total_lines / this->assoc;
     this->offset_bits = log2(this->line_size);
     this->offset_mask = (1u << this->offset_bits) - 1;
     this->index_bits = log2(this->cache_size/(this->line_size * this->assoc));
     this->index_mask = (1u << this->index_bits) - 1;
+    this->gen = mt19937(0);
 
     if (this->cache_size % this->line_size != 0)
     {
@@ -84,9 +88,10 @@ pair<line*, size_t> cache::replace_line(line* new_line_, size_t address_)
 
     // None of the line in the set is empty, so we evict one line from the set to make space for the new line
     // TO-DO: implement eviction policy. 
-    line* evicted_line = this->cache_lines[index * this->assoc];
-    this->cache_lines[index * this->assoc] = new_line_;
-    this->cache_lines[index * this->assoc]->set_tag(tag);
+    size_t line_number_to_replace = this->eviction_policy(index);
+    line* evicted_line = this->cache_lines[line_number_to_replace];
+    this->cache_lines[line_number_to_replace] = new_line_;
+    this->cache_lines[line_number_to_replace]->set_tag(tag);
 
     // Return the evicted line if the dirty bit is 1, otherwise return nullptr
     if (evicted_line->get_dirty_bit())
@@ -96,7 +101,23 @@ pair<line*, size_t> cache::replace_line(line* new_line_, size_t address_)
     }
     else   
         return make_pair(nullptr, NULL);
+}
 
+size_t cache::eviction_policy(size_t index)
+{
+    if (this->replacement_policy == "first_line")
+    {
+        return index * this->assoc;
+    }
+    else if (this->replacement_policy == "random")
+    {
+        uniform_int_distribution<size_t> dist(index*this->assoc, (index+1)*this->assoc - 1);
+        size_t line_number_to_evict = dist(this->gen);
+        cout << "Randomly picked line up for eviction: " << line_number_to_evict << endl;
+        return line_number_to_evict;
+    }
+    else
+        throw invalid_argument("Unknown replacement policy");
 }
 
 vector<line*> cache::get_cache_lines()
