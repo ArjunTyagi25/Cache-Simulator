@@ -1,6 +1,8 @@
 #include<cache.hpp>
 #include<iostream>
 
+using namespace std;
+
 cache::cache(size_t cache_size_, size_t line_size_, size_t assoc_)
 {
     this->cache_size = cache_size_;
