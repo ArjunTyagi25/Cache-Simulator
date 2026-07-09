@@ -22,7 +22,7 @@ cache::cache(size_t cache_size_, size_t line_size_, size_t assoc_)
 
     for (size_t i = 0; i < this->number_of_total_lines; i++)
     {
-        line* l = new line(this->line_size);
+        line* l = new line(this->line_size, false, "zeros");
         this->cache_lines.push_back(l);
     }
 }
@@ -65,7 +65,7 @@ bool cache::write_byte(size_t address_, u_int8_t write_data_)
     return false;
 }
 
-line* cache::replace_line(line* new_line_, size_t address_)
+pair<line*, size_t> cache::replace_line(line* new_line_, size_t address_)
 {
     // This function places a new line in the cache by either finding an empty spot or evicting an line.
     size_t offset = address_ & this->offset_mask;
@@ -77,7 +77,7 @@ line* cache::replace_line(line* new_line_, size_t address_)
         if (!this->cache_lines[i]->get_valid())
         {
             this->cache_lines[i] = new_line_;
-            return nullptr;
+            return make_pair(nullptr, NULL);
         }
     }
 
@@ -86,8 +86,14 @@ line* cache::replace_line(line* new_line_, size_t address_)
     line* evicted_line = this->cache_lines[index * this->assoc];
     this->cache_lines[index * this->assoc] = new_line_;
 
-    // Return the evicted line
-    return evicted_line;
+    // Return the evicted line if the dirty bit is 1, otherwise return nullptr
+    if (evicted_line->get_dirty_bit())
+    {
+        size_t evicted_line_address = (evicted_line->get_tag() << (this->index_bits + this->offset_bits)) | (index << this->offset_bits);
+        return make_pair(evicted_line, evicted_line_address);
+    }
+    else   
+        return make_pair(nullptr, NULL);
 
 }
 
@@ -106,4 +112,15 @@ vector<vector<u_int8_t>> cache::get_cache_data()
     }
 
     return cache_data;
+}
+
+void cache::print_cache_data()
+{
+    cout << "Line #\tValid\tDirty\tTag\tData" << endl;
+    for (size_t i = 0; i < this->number_of_total_lines; i++)
+    {
+        cout << i << "\t";
+        this->cache_lines[i]->print_line_data();
+        cout << endl;
+    }
 }
