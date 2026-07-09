@@ -70,12 +70,14 @@ pair<line*, size_t> cache::replace_line(line* new_line_, size_t address_)
 {
     // This function places a new line in the cache by either finding an empty spot or evicting an line.
     size_t index = (address_ >> this->offset_bits) & this->index_mask;
+    size_t tag = (address_ >> (this->index_bits + this->offset_bits));
     for (size_t i = index*this->assoc; i < (index+1) * this->assoc; i++)
     {
         // Check if there is a line in the set that is empty (i.e., valid bit is 0)
         if (!this->cache_lines[i]->get_valid())
         {
             this->cache_lines[i] = new_line_;
+            this->cache_lines[i]->set_tag(tag);
             return make_pair(nullptr, NULL);
         }
     }
@@ -84,11 +86,12 @@ pair<line*, size_t> cache::replace_line(line* new_line_, size_t address_)
     // TO-DO: implement eviction policy. 
     line* evicted_line = this->cache_lines[index * this->assoc];
     this->cache_lines[index * this->assoc] = new_line_;
+    this->cache_lines[index * this->assoc]->set_tag(tag);
 
     // Return the evicted line if the dirty bit is 1, otherwise return nullptr
     if (evicted_line->get_dirty_bit())
     {
-        size_t evicted_line_address = (evicted_line->get_tag() << (this->index_bits + this->offset_bits)) | (index << this->offset_bits);
+        size_t evicted_line_address = (evicted_line->get_tag().value() << (this->index_bits + this->offset_bits)) | (index << this->offset_bits);
         return make_pair(evicted_line, evicted_line_address);
     }
     else   
@@ -119,7 +122,7 @@ void cache::print_cache_data()
     for (size_t i = 0; i < this->number_of_total_lines; i++)
     {
         cout << i << "\t";
-        this->cache_lines[i]->print_line_data();
+        this->cache_lines[i]->print_line_data(true);
         cout << endl;
     }
 }
