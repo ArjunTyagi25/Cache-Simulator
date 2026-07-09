@@ -1,13 +1,14 @@
 #pragma once
 
-#include<line.hpp>
+#include<optional>
 #include<vector>
+#include<line.hpp>
 
 class cache
 {
     public:
         cache(size_t cache_size_, size_t line_size_, size_t assoc_);
-        u_int8_t find_byte(size_t address_);
+        std::optional<uint8_t> find_byte(size_t address_);
         bool write_byte(size_t address_, u_int8_t write_data_);
         std::pair<line*, size_t> replace_line(line* new_line_, size_t address_);
         std::vector<line*> get_cache_lines();
