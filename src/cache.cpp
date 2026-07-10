@@ -31,6 +31,20 @@ cache::cache(size_t cache_size_, size_t line_size_, size_t assoc_, string replac
         this->cache_lines.push_back(l);
         this->access_counts.push_back(0);
     }
+
+    this->total_accesses = 0;
+    this->read_accesses = 0;
+    this->write_accesses = 0;
+
+    this->read_hits = 0;
+    this->read_misses = 0;
+    this->write_hits = 0;
+    this->write_misses = 0;
+
+    this->total_hits = 0;
+    this->total_misses = 0;
+    this->hit_rate = 0;
+    this->miss_rate = 0;
 }
 
 std::optional<u_int8_t> cache::find_byte(size_t address_)
@@ -38,16 +52,22 @@ std::optional<u_int8_t> cache::find_byte(size_t address_)
     size_t offset = address_ & this->offset_mask;
     size_t index = (address_ >> this->offset_bits) & this->index_mask;
     size_t tag = (address_ >> (this->offset_bits + this->index_bits));
+    this->read_accesses += 1;
+    this->total_accesses += 1;
     for (size_t i = index*this->assoc; i < (index+1) * this->assoc; i++)
     {
         if (this->cache_lines[i]->get_tag() == tag && this->cache_lines[i]->get_valid())
         {
             u_int8_t byte = this->cache_lines[i]->get_byte(offset);
             this->access_counts[i] += 1;
+            this->read_hits += 1;
+            this->total_hits += 1;
             return byte;
         }
     }
 
+    this->read_misses += 1;
+    this->total_misses += 1;
     return nullopt;
 }
 
@@ -56,6 +76,8 @@ bool cache::write_byte(size_t address_, u_int8_t write_data_)
     size_t offset = address_ & this->offset_mask;
     size_t index = (address_ >> this->offset_bits) & this->index_mask;
     size_t tag = (address_ >> (this->offset_bits + this->index_bits));
+    this->write_accesses += 1;
+    this->total_accesses += 1;
     for (size_t i = index*this->assoc; i < (index+1) * this->assoc; i++)
     {
         // Check if line is already present in the cache
@@ -63,6 +85,8 @@ bool cache::write_byte(size_t address_, u_int8_t write_data_)
         {
             this->cache_lines[i]->write_byte(write_data_, tag, offset);
             this->access_counts[i] += 1;
+            this->write_hits += 1;
+            this->total_hits += 1;
             return true;
         }
     }
@@ -70,11 +94,12 @@ bool cache::write_byte(size_t address_, u_int8_t write_data_)
     // The line which contains the address where we wanna write is not present in the cache. 
     // We return 0 to indicate that write operation has not completed succesfully.
     // Next step would be to get the line containing that byte address from a lower-level cache and write that entire line into the higher-level cache.
+    this->write_misses += 1;
+    this->total_misses += 1;
     return false;
 }
 
-// This function places a new line in the cache by either finding an empty spot or evicting an line.
-pair<line*, size_t> cache::replace_line(line* new_line_, size_t address_)
+pair<line*, size_t> cache::place_line(line* new_line_, size_t address_)
 {
     size_t index = (address_ >> this->offset_bits) & this->index_mask;
     size_t tag = (address_ >> (this->index_bits + this->offset_bits));
