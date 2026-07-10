@@ -29,6 +29,7 @@ cache::cache(size_t cache_size_, size_t line_size_, size_t assoc_, string replac
     {
         line* l = new line(this->line_size, false, "zeros");
         this->cache_lines.push_back(l);
+        this->access_counts.push_back(0);
     }
 }
 
@@ -42,6 +43,7 @@ std::optional<u_int8_t> cache::find_byte(size_t address_)
         if (this->cache_lines[i]->get_tag() == tag && this->cache_lines[i]->get_valid())
         {
             u_int8_t byte = this->cache_lines[i]->get_byte(offset);
+            this->access_counts[i] += 1;
             return byte;
         }
     }
@@ -60,6 +62,7 @@ bool cache::write_byte(size_t address_, u_int8_t write_data_)
         if (this->cache_lines[i]->get_tag() == tag && this->cache_lines[i]->get_valid())
         {
             this->cache_lines[i]->write_byte(write_data_, tag, offset);
+            this->access_counts[i] += 1;
             return true;
         }
     }
@@ -70,9 +73,9 @@ bool cache::write_byte(size_t address_, u_int8_t write_data_)
     return false;
 }
 
+// This function places a new line in the cache by either finding an empty spot or evicting an line.
 pair<line*, size_t> cache::replace_line(line* new_line_, size_t address_)
 {
-    // This function places a new line in the cache by either finding an empty spot or evicting an line.
     size_t index = (address_ >> this->offset_bits) & this->index_mask;
     size_t tag = (address_ >> (this->index_bits + this->offset_bits));
     for (size_t i = index*this->assoc; i < (index+1) * this->assoc; i++)
@@ -81,16 +84,16 @@ pair<line*, size_t> cache::replace_line(line* new_line_, size_t address_)
         if (!this->cache_lines[i]->get_valid())
         {
             this->cache_lines[i] = new_line_;
+            this->access_counts[i] = 0;
             this->cache_lines[i]->set_tag(tag);
             return make_pair(nullptr, NULL);
         }
     }
 
-    // None of the line in the set is empty, so we evict one line from the set to make space for the new line
-    // TO-DO: implement eviction policy. 
     size_t line_number_to_replace = this->eviction_policy(index);
     line* evicted_line = this->cache_lines[line_number_to_replace];
     this->cache_lines[line_number_to_replace] = new_line_;
+    this->access_counts[line_number_to_replace] = 0;
     this->cache_lines[line_number_to_replace]->set_tag(tag);
 
     // Return the evicted line if the dirty bit is 1, otherwise return nullptr
@@ -105,16 +108,43 @@ pair<line*, size_t> cache::replace_line(line* new_line_, size_t address_)
 
 size_t cache::eviction_policy(size_t index)
 {
+    size_t line_number_to_evict;
     if (this->replacement_policy == "first_line")
     {
-        return index * this->assoc;
+        line_number_to_evict = index * this->assoc;
+        return line_number_to_evict;
     }
     else if (this->replacement_policy == "random")
     {
         uniform_int_distribution<size_t> dist(index*this->assoc, (index+1)*this->assoc - 1);
-        size_t line_number_to_evict = dist(this->gen);
-        cout << "Randomly picked line up for eviction: " << line_number_to_evict << endl;
+        line_number_to_evict = dist(this->gen);
         return line_number_to_evict;
+    }
+    else if (this->replacement_policy == "LFU")
+    {
+        int min_count = numeric_limits<int>::max();
+        for (size_t i = index*this->assoc; i < (index+1)*this->assoc; i++)
+        {
+            if (this->access_counts[i] <= min_count)
+            {
+                min_count = this->access_counts[i];
+                line_number_to_evict = i;
+            }
+        }
+        return line_number_to_evict;
+    }
+    else if (this->replacement_policy == "MFU")
+    {
+       int max_count = numeric_limits<int>::min();
+        for (size_t i = index*this->assoc; i < (index+1)*this->assoc; i++)
+        {
+            if (this->access_counts[i] >= max_count)
+            {
+                max_count = this->access_counts[i];
+                line_number_to_evict = i;
+            }
+        }
+        return line_number_to_evict; 
     }
     else
         throw invalid_argument("Unknown replacement policy");

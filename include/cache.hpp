@@ -31,4 +31,5 @@ class cache
         size_t index_mask;
         std::mt19937 gen;
         std::vector<line*> cache_lines;
+        std::vector<int> access_counts;
 };
