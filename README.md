@@ -2,8 +2,8 @@
 This is a cache simulator.
 
 ## Features to Implement
-- [ ] Detailed statistics
-- [ ] Verbose mode
+- [x] Detailed statistics
+- [x] Verbose mode
 - [ ] Different write policies
 - [ ] LRU, pseudo-LRU and FIFO replacement policy
 - [ ] Add cache and memory latency models
@@ -12,3 +12,10 @@ This is a cache simulator.
 - [ ] Distinguishing between virtual and physical address
 - [ ] Translating virtual address to physical address
 - [ ] Lockup-free cache implementation
+
+## How to Build & Run
+```
+mkdir build
+cd build/
+cmake ..
+```
