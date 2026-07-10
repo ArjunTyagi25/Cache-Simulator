@@ -4,6 +4,8 @@
 #include<fstream>
 #include<sstream>
 #include<cstdint>
+#include<cstring>
+#include<cmath>
 #include<cache.hpp>
 #include<memory.hpp>
 
@@ -40,9 +42,9 @@ vector<vector<string>> read_trace_file(string trace_file_path)
 
 int main(int argc, char** argv)
 {
-    if (argc < 15)
+    if (argc < 17)
     {
-        cerr << "Missing arguments. Usage: " << argv[0] << " --memory_size <memory size in kB> --page_size <page size in kB> --cache_size <cache size in kB> --line_size <line size in kB> --assoc <associativity> --replacement_policy <specify the replacement policy for the cache> --trace_file <path to trace file>" << endl;
+        cerr << "Missing arguments. Usage: " << argv[0] << " --memory_size <memory size in kB> --page_size <page size in kB> --cache_size <cache size in kB> --line_size <line size in kB> --assoc <associativity> --replacement_policy <specify the replacement policy for the cache> --trace_file <path to trace file> --verbose true" << endl;
         return -1;
     }
     size_t memory_size = 8192;
@@ -52,8 +54,9 @@ int main(int argc, char** argv)
     size_t assoc = 4;
     string replacement_policy = "first_line";
     string trace_file_path;
+    bool verbose = false;
 
-    for (int i = 1; i < 14; i += 2)
+    for (int i = 1; i < 16; i += 2)
     {
         if (!strcmp(argv[i], "--memory_size"))
             memory_size = strtoull(argv[i+1], NULL, 10);
@@ -69,6 +72,8 @@ int main(int argc, char** argv)
             replacement_policy = argv[i+1];
         else if (!strcmp(argv[i], "--trace_file"))
             trace_file_path = argv[i+1];
+        else if (!strcmp(argv[i], "--verbose"))
+            verbose = (!strcmp(argv[i+1], "true"));
         else
         {
             cerr << "Undefined flag. Usage: " << argv[0] << " --memory_size <memory size in kB> --page_size <page size in kB> --cache_size <cache size in kB> --line_size <line size in kB> --assoc <associativity> --replacement_policy <specify the replacement policy for the cache> --trace_file <path to trace file>" << endl;
@@ -79,8 +84,9 @@ int main(int argc, char** argv)
     size_t line_offset_bits = log2(line_size);
     size_t page_offset_bits = log2(page_size);
     size_t index_bits = log2(cache_size/(line_size*assoc));
-    int accesses = 0, hits = 0, misses = 0;
-
+    size_t index_mask = (1u << (index_bits+line_offset_bits)) - 1;
+    size_t line_offset_mask = (1u << line_offset_bits) - 1;
+    size_t page_offset_mask = (1u << page_offset_bits) - 1;
 
     cout << "========================SIMULATION PARAMETERS========================" << endl;
     cout << "Memory size (kB): " << memory_size << endl;
@@ -116,7 +122,6 @@ int main(int argc, char** argv)
     
     for (size_t lines = 0; lines < trace.size(); lines++)
     {
-        accesses++;
         string operation = trace[lines][0];
         size_t address = static_cast<size_t>(stoul(trace[lines][1], nullptr, 16));
         size_t data;
@@ -125,59 +130,85 @@ int main(int argc, char** argv)
 
         if (operation == "R")
         {
-            cout << "-----------------------------------------------------------" << endl; 
-            cout << "Trace: " << operation << " " << address << endl;
+            string status;
+            bool evicted = false;
             optional<u_int8_t> result = C->find_byte(address);
             if (result.has_value())
             {
-                size_t byte = static_cast<size_t>(*result);
-                cout << "Read Hit! Found the data " << byte << " at address " << address << endl; 
-                hits++;
+                status = "HIT";
             }
             else
             {
-                cout << "Read Miss! Line containing address " << address << " was not found in the cache. Requesting from memory..." << endl;
                 line* l = M->get_line(address);
-                pair<line*, size_t> evicted_line = C->replace_line(l, address);
+                pair<line*, size_t> evicted_line = C->place_line(l, address);
                 if (evicted_line.first != nullptr)
+                {
                     M->write_line(evicted_line.first, evicted_line.second);
-                misses++;
+                    evicted = true;
+                }
+                status = "MISS";
+            }
+
+            if (verbose)
+            {
+                cout << "-----------------------------------------------------------" << endl; 
+                cout << "\tTrace: " << operation << " " << address << endl;
+                cout << "\tTag: " << hex << (address >> (index_bits + line_offset_bits)) << endl;
+                cout << "\tIndex: " << hex << ((address & index_mask) >> line_offset_bits) << endl;
+                cout << "\tLine Offset: " << hex << (address & line_offset_mask) << endl;
+                cout << "\tPage Number: " << hex << (address >> page_offset_bits) << endl;
+                cout << "\tPage Offset: " << hex << (address & page_offset_mask) << endl;
+                cout << "\tStatus: " << status << endl; 
+                cout << "\tEvicted: " << evicted << endl;
+                if (status == "HIT")
+                    cout << "\tRead Value: " << static_cast<size_t>(*result) << endl; 
+                C->print_cache_data();
+                cout << "-----------------------------------------------------------" << endl;
             }
         }
         else if (operation == "W")
         {
-            cout << "-----------------------------------------------------------" << endl; 
-            cout << "Trace: " << operation << " " << address << " " << data << endl;
+            string status;
+            bool evicted = false;
             bool write_successful = C->write_byte(address, data);
             if (write_successful)
             {
-                hits++;
-                cout << "Write Hit! Found the line containing address " << address << " in the cache so writing data " << data << " at that address was successful." << endl;
+                status = "HIT";
             }
             else
             {
-                misses++;
-                cout << "Write Miss! Line containing address " << address << " was not found in the cache. Requesting from memory..." << endl;
                 line* requested_line = M->get_line(address);
-                pair<line*, size_t> evicted_line = C->replace_line(requested_line, address);
+                requested_line->write_byte(data, (address >> (index_bits + line_offset_bits)), ((address & index_mask) >> line_offset_bits));
+                pair<line*, size_t> evicted_line = C->place_line(requested_line, address);
                 if (evicted_line.first != nullptr)
-                    M->write_line(evicted_line.first, evicted_line.second);
-
-                bool write_successful = C->write_byte(address, data);
-                if (write_successful)
                 {
-                    cout << "Found the line containing address " << address << " in the cache so writing data " << data << " at that address was successful." << endl;
+                    M->write_line(evicted_line.first, evicted_line.second);
+                    evicted = true;
                 }
+                status = "MISS";
+            }
+
+            if (verbose)
+            {
+                cout << "-----------------------------------------------------------" << endl; 
+                cout << "\tTrace: " << operation << " " << address << " " << data << endl;
+                cout << "\tTag: " << hex << (address >> (index_bits + line_offset_bits)) << endl;
+                cout << "\tIndex: " << hex << ((address & index_mask) >> line_offset_bits) << endl;
+                cout << "\tLine Offset: " << hex << (address & line_offset_mask) << endl;
+                cout << "\tPage Number: " << hex << (address >> page_offset_bits) << endl;
+                cout << "\tPage Offset: " << hex << (address & page_offset_mask) << endl;
+                cout << "\tStatus: " << status << endl; 
+                cout << "\tEvicted: " << evicted << endl;
+                C->print_cache_data();
+                cout << "-----------------------------------------------------------" << endl;
             }
         }
-        C->print_cache_data();
-        cout << "-----------------------------------------------------------" << endl;
     }
 
     cout << "------------------------FINAL STATS------------------------" << endl;
-    cout << "Accesses: " << dec << accesses << endl;
-    cout << "Hits: " << dec << hits << endl;
-    cout << "Misses: " << dec << misses << endl;
+    cout << "Total Accesses: " << dec << C->total_accesses << endl;
+    cout << "Total Hits: " << dec << C->total_hits << endl;
+    cout << "Total Misses: " << dec << C->total_misses << endl;
     cout << "-----------------------------------------------------------" << endl;
     
     return 1;
