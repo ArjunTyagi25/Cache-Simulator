@@ -8,7 +8,30 @@
 class cache
 {
     public:
+        // Cache stats
+        size_t total_accesses;
+        size_t read_accesses;
+        size_t write_accesses;
+
+        size_t read_hits;
+        size_t read_misses;
+        size_t write_hits;
+        size_t write_misses;
+
+        size_t total_hits;
+        size_t total_misses;
+        double hit_rate;
+        double miss_rate;
+
+        /*
+        * @brief Constructor for cache class
+        * @param cache_size_ Size of the cache
+        * @param line_size_ Size of a line in the cache
+        * @param assoc_ Associativity of the cache
+        * @param replacement_policy_ Replacement policy of the cache in case of cache conflict miss
+        */
         cache(size_t cache_size_, size_t line_size_, size_t assoc_, std::string replacement_policy_);
+        
         /*
         * @brief Find a byte of data in the cache
         * @param address_ Address of the byte to be read
@@ -71,19 +94,4 @@ class cache
         std::mt19937 gen;
         std::vector<line*> cache_lines;
         std::vector<int> access_counts;
-
-        // Cache stats
-        size_t total_accesses;
-        size_t read_accesses;
-        size_t write_accesses;
-
-        size_t read_hits;
-        size_t read_misses;
-        size_t write_hits;
-        size_t write_misses;
-
-        size_t total_hits;
-        size_t total_misses;
-        double hit_rate;
-        double miss_rate;
 };
