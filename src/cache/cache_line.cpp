@@ -1,10 +1,10 @@
 #include<random>
 #include<iostream>
-#include<line.hpp>
+#include"../../include/cache/cache_line.hpp"
 
 using namespace std;
 
-line::line(size_t line_size_, bool valid_, string init_)
+cache_line::cache_line(size_t line_size_, bool valid_, string init_)
 {
     this->line_size = line_size_;
 
@@ -25,17 +25,17 @@ line::line(size_t line_size_, bool valid_, string init_)
     this->dirty = false;
 }
 
-u_int8_t line::get_byte(size_t offset_)
+u_int8_t cache_line::get_byte(size_t offset_)
 {
     return this->line_data[offset_];
 }
 
-vector<u_int8_t> line::get_line_data()
+vector<u_int8_t> cache_line::get_line_data()
 {
     return this->line_data;
 }
 
-void line::write_byte(u_int8_t write_data_, size_t tag_, size_t offset_)
+void cache_line::write_byte(u_int8_t write_data_, size_t tag_, size_t offset_)
 {
     this->line_data[offset_] = write_data_;
     this->tag = tag_;
@@ -43,7 +43,7 @@ void line::write_byte(u_int8_t write_data_, size_t tag_, size_t offset_)
     this->dirty = true;
 }
 
-void line::write_line(vector<u_int8_t> write_data_, size_t tag_)
+void cache_line::write_line(vector<u_int8_t> write_data_, size_t tag_)
 {
     this->line_data = write_data_;
     this->tag = tag_;
@@ -51,42 +51,31 @@ void line::write_line(vector<u_int8_t> write_data_, size_t tag_)
     this->dirty = true;
 }
 
-void line::set_tag(optional<size_t> tag_)
+void cache_line::set_tag(size_t tag_)
 {
     this->tag = tag_;
 }
 
-optional<size_t> line::get_tag()
+optional<size_t> cache_line::get_tag()
 {
     return this->tag;
 }
 
-bool line::get_valid()
+bool cache_line::get_valid()
 {
     return this->valid;
 }
 
-bool line::get_dirty_bit()
+bool cache_line::get_dirty_bit()
 {
     return this->dirty;
 }
 
-void line::print_line_data(bool print_tag_)
+void cache_line::print_line_data()
 {
-    if (print_tag_)
-    {   
-        cout << this->valid << "\t" << this->dirty << "\t" << this->tag.value() << "\t";
-        for (size_t i = 0; i < this->line_size; i++)
-        {
-            cout << hex << static_cast<int>(this->line_data[i]) << " ";
-        }
-    }
-    else
+    cout << this->valid << "\t" << this->dirty << "\t" << this->tag << "\t";
+    for (size_t i = 0; i < this->line_size; i++)
     {
-        cout << this->valid << "\t" << this->dirty << "\t" ;
-        for (size_t i = 0; i < this->line_size; i++)
-        {
-            cout << hex << static_cast<int>(this->line_data[i]) << " ";
-        }
+        cout << hex << static_cast<int>(this->line_data[i]) << " ";
     }
 }

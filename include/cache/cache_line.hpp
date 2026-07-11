@@ -5,7 +5,7 @@
 #include<string>
 #include<optional>
 
-class line
+class cache_line
 {
     public:
         /*
@@ -14,7 +14,7 @@ class line
         * @param valid_ Valid bit for the line
         * @param init_ Decide how to initialize the line. Options are `zeros`, `one`, or 'random'
         */
-        line(size_t line_size_, bool valid_, std::string init_);
+        cache_line(size_t line_size_, bool valid_, std::string init_);
 
         /*
         * @brief Get a byte from the line
@@ -52,9 +52,9 @@ class line
 
         /*
         * @brief Set the line's tag
-        * @param tag_ `size_t` if the line is being sent to the cache, `nullopt` if the line is being sent to the memory
+        * @param tag_ Tag that we want to set for the line
         */
-        void set_tag(std::optional<size_t> tag_);
+        void set_tag(size_t tag_);
 
         /*
         * @brief Get the valid bit of the line
@@ -70,13 +70,12 @@ class line
 
         /*
         * @brief Print the line's data
-        * @param print_tag_ `true` if line is in cache so print the tags, `false` if the line is in memory
         */
-        void print_line_data(bool print_tag_);
+        void print_line_data();
 
     private:
         std::vector<u_int8_t> line_data;
-        std::optional<size_t> tag;
+        size_t tag;
         bool valid; 
         bool dirty;
         size_t line_size;
