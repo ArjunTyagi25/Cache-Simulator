@@ -20,6 +20,9 @@ class cache
 
         size_t total_hits;
         size_t total_misses;
+        size_t total_evictions;
+        size_t dirty_evictions;
+        size_t non_dirty_eviction;
         double hit_rate;
         double miss_rate;
 
@@ -51,9 +54,10 @@ class cache
         * @brief Place a line of data in the cache
         * @param write_data_ Data of the line that needs to be placed in the cache
         * @param address_ Address of the line that needs to be placed in the cache
+        * @param dirty_bit_ Dirty bit of the line that needs to be placed in the cache
         * @return Evicted line's data along with its address
         */
-        std::optional<std::pair<std::vector<u_int8_t>, size_t>> place_line(std::vector<u_int8_t> write_data_, size_t address_);
+        std::optional<std::pair<std::vector<u_int8_t>, size_t>> place_line(std::vector<u_int8_t> write_data_, size_t address_, bool dirty_bit_);
 
         /*
         * @brief Implement different eviction (a.k.a., replacement) policies
