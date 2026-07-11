@@ -1,6 +1,6 @@
 #include<iostream>
 #include<cmath>
-#include<memory.hpp>
+#include "../../include/memory/memory.hpp"
 
 using namespace std;
 
@@ -23,18 +23,24 @@ memory::memory(size_t memory_size_, size_t page_size_, size_t line_size_, string
     }
 }
 
-line* memory::get_line(size_t address_)
+memory_line* memory::get_line(size_t address_)
 {
     size_t page_number = address_ >> this->page_offset_bits;
 
     return this->pages[page_number]->get_line(address_);
 }
 
-void memory::write_line(line* l_, size_t address_)
+void memory::write_byte(u_int8_t write_data_, size_t address_)
 {
     size_t page_number = address_ >> this->page_offset_bits;
+    
+    this->pages[page_number]->write_byte(write_data_, address_);
+}
 
-    this->pages[page_number]->write_line(l_, address_);
+void memory::write_line(vector<u_int8_t> write_data_, size_t address_)
+{
+    size_t page_number = address_ >> this->page_offset_bits;
+    this->pages[page_number]->write_line(write_data_, address_);
 }
 
 void memory::print_memory_data()
