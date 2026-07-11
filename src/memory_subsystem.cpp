@@ -87,7 +87,7 @@ u_int8_t memory_subsystem::read(size_t address_)
         size_t offset = address_ & offset_mask;
         read_byte = mem_line_data[offset];
 
-        optional<pair<vector<u_int8_t>, size_t>> evicted_line = this->L1->place_line(mem_line_data, address_);
+        optional<pair<vector<u_int8_t>, size_t>> evicted_line = this->L1->place_line(mem_line_data, address_, false);
         if (evicted_line.has_value())
         {
             vector<u_int8_t> evicted_line_data = evicted_line.value().first;
@@ -127,6 +127,10 @@ void memory_subsystem::write(size_t address_, u_int8_t data_)
     {
         status = "WRITE HIT";
 
+        // Since the write policy is write-through, the same byte has to be written to the main memory too
+        if (this->write_policy == "write_through")
+            this->main_memory->write_byte(data_, address_);
+
         if (verbose)
         {
             cout << "-----------------------------------------------------------" << endl; 
@@ -157,19 +161,27 @@ void memory_subsystem::write(size_t address_, u_int8_t data_)
         // With write allocate, we have to move the line containing the byte to the cache
         else
         {
-            size_t offset_bits = log2(this->line_size);
-            size_t offset_mask = (1u << offset_bits) - 1;
-            size_t offset = address_ & offset_mask;
+            size_t offset = address_ & this->line_offset_mask;
             memory_line* requested_line = this->main_memory->get_line(address_);
             vector<u_int8_t> requested_line_data = requested_line->get_line_data();
             requested_line_data[offset] = data_;
-            optional<pair<vector<u_int8_t>, size_t>> evicted_line = this->L1->place_line(requested_line_data, address_);
+            optional<pair<vector<u_int8_t>, size_t>> evicted_line;
+            
+            if (this->write_policy == "write_back")
+                evicted_line = this->L1->place_line(requested_line_data, address_, true);
+            else if (this->write_policy == "write_through")
+                evicted_line = this->L1->place_line(requested_line_data, address_, false);
+                 
             if (evicted_line.has_value())
             {
                 vector<u_int8_t> evicted_line_data = evicted_line.value().first;
                 this->main_memory->write_line(evicted_line_data, evicted_line.value().second);
                 evicted = true;
             }
+
+            // If the write policy is write-through, update the memory as well
+            if (this->write_policy == "write_through")
+                this->main_memory->write_byte(data_, address_);
         }
 
         if (verbose)
@@ -197,10 +209,13 @@ void memory_subsystem::report_stats()
     cout << "--------------------CACHE STATISTICS--------------------" << endl;
     cout << "Total Accesses: " << dec << this->L1->total_accesses << endl;
     cout << "Total Hits: " << dec << this->L1->total_hits << endl;
-    cout << "Read Hits: " << dec << this->L1->read_hits << endl;
-    cout << "Write Hits: " << dec << this->L1->write_hits << endl;
+    cout << "\tRead Hits: " << dec << this->L1->read_hits << endl;
+    cout << "\tWrite Hits: " << dec << this->L1->write_hits << endl;
     cout << "Total Misses: " << dec << this->L1->total_misses << endl;
-    cout << "Read Misses: " << dec << this->L1->read_misses << endl;
-    cout << "Write Misses: " << dec << this->L1->write_misses << endl;
+    cout << "\tRead Misses: " << dec << this->L1->read_misses << endl;
+    cout << "\tWrite Misses: " << dec << this->L1->write_misses << endl;
+    cout << "Total Evictions: " << dec << this->L1->total_evictions << endl;
+    cout << "\tDirty Evictions: " << dec << this->L1->dirty_evictions << endl;
+    cout << "\tNon-Dirty Evictions: " << dec << this->L1->non_dirty_eviction << endl;
     cout << "--------------------------------------------------------" << endl;
 }
