@@ -1,15 +1,15 @@
 #pragma once
 
-#include<cstdint>
-#include<vector>
-#include<string>
-#include<optional>
+#include <cstdint>
+#include <vector>
+#include <string>
+#include <optional>
 
 class cache_line
 {
     public:
         /*
-        * @brief Constructor for line class
+        * @brief Constructor for cache_line class
         * @param line_size_ Size of the line
         * @param valid_ Valid bit for the line
         * @param init_ Decide how to initialize the line. Options are `zeros`, `one`, or 'random'
@@ -17,7 +17,7 @@ class cache_line
         cache_line(size_t line_size_, bool valid_, std::string init_);
 
         /*
-        * @brief Get a byte from the line
+        * @brief Get a byte from the cache line
         * @param offset_ Offset in the line
         * @return Returns a byte of data of type `u_int8_t` from the line
         */
@@ -46,9 +46,9 @@ class cache_line
 
         /*
         * @brief Returns the line's tag
-        * @return `size_t` if the line is present in the cache, `nullopt` if the line is present in the memory
+        * @return `size_t` tag
         */
-        std::optional<size_t> get_tag();
+        size_t get_tag();
 
         /*
         * @brief Set the line's tag
