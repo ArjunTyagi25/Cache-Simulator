@@ -2,7 +2,7 @@
 
 #include<vector>
 #include<string>
-#include<page.hpp>
+#include "page.hpp"
 
 class memory
 {
@@ -21,14 +21,21 @@ class memory
         * @param address_ Address of the byte within the line that needs to be read
         * @return Pointer to the line of type `line*`
         */
-        line* get_line(size_t address_);
+        memory_line* get_line(size_t address_);
+
+        /*
+        * @brief Write a byte to memory
+        * @param write_data_ Data to be written
+        * @param address_ Address of the location where data is to be written
+        */
+        void write_byte(u_int8_t write_data_, size_t address_);
 
         /*
         * @brief Update a line in the memory
-        * @param l_ `line*` pointer to the line
+        * @param write_data Data of the entire line that is to be written to the memory
         * @param address_ Address to any byte within the line from which the page number will be calculated
         */
-        void write_line(line* l_, size_t address_);
+        void write_line(std::vector<u_int8_t> write_data_, size_t address_);
 
         /*
         * @brief Prints all the memory's content
