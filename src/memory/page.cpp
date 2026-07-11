@@ -1,6 +1,6 @@
-#include<page.hpp>
-#include<iostream>
-#include<cmath>
+#include <iostream>
+#include <cmath>
+#include "../../include/memory/page.hpp"
 
 using namespace std;
 
@@ -13,32 +13,41 @@ page::page(size_t page_size_, size_t line_size_, string init_)
         cout << "Page size is not a multiple of line size" << endl;
 
     this->number_of_lines = this->page_size / this->line_size;
+
     this->page_offset_bits = log2(this->page_size);
     this->page_offset_mask = (1u << this->page_offset_bits) - 1;
+
+    this->line_offset_bits = log2(this->line_size);
+    this->line_offset_mask = (1u << this->line_offset_bits) - 1;
+
+    this->line_index_bits = log2(this->number_of_lines);
+    this->line_index_mask = (1u << this->line_index_bits) - 1;
     
     for (size_t i = 0; i < this->number_of_lines; i++)
     {
-        line* l = new line(this->line_size, true, init_);
+        memory_line* l = new memory_line(this->line_size, true, init_);
         this->page_lines.push_back(l);
     }
-
 }
 
-line* page::get_line(size_t address_)
+memory_line* page::get_line(size_t address_)
 {
-    size_t line_offset_bit = log2(this->line_size);
-    size_t page_offset = address_ & this->page_offset_mask;
-    size_t line_index = page_offset >> line_offset_bit;
+    size_t line_index = (address_ >> this->line_offset_bits) & this->line_index_mask;
     return this->page_lines[line_index];
 }
 
-void page::write_line(line* l_, size_t address_)
+void page::write_byte(u_int8_t write_data_, size_t address_)
 {
-    size_t line_offset_bit = log2(this->line_size);
-    size_t line_index = address_ >> line_offset_bit;
+    size_t line_index = (address_ >> this->line_offset_bits) & this->line_index_mask;
+    size_t line_offset = address_ & line_offset_mask;
 
-    this->page_lines[line_index] = l_;
-    this->page_lines[line_index]->set_tag(nullopt);
+    this->page_lines[line_index]->write_byte(write_data_, line_offset); 
+}
+
+void page::write_line(vector<u_int8_t> line_data_, size_t address_)
+{
+    size_t line_index = (address_ >> this->line_offset_bits) & this->line_index_mask;
+    this->page_lines[line_index]->write_line(line_data_);
 }
 
 void page::print_page_data()
@@ -47,7 +56,7 @@ void page::print_page_data()
     for (size_t i = 0; i < this->number_of_lines; i++)
     {
         cout << i << "\t";
-        this->page_lines[i]->print_line_data(false);
+        this->page_lines[i]->print_line_data();
         cout << endl;
     }
 }
