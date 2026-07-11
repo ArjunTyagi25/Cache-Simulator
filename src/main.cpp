@@ -89,9 +89,6 @@ int main(int argc, char** argv)
     size_t line_offset_bits = log2(line_size);
     size_t page_offset_bits = log2(page_size);
     size_t index_bits = log2(cache_size/(line_size*assoc));
-    size_t index_mask = (1u << (index_bits+line_offset_bits)) - 1;
-    size_t line_offset_mask = (1u << line_offset_bits) - 1;
-    size_t page_offset_mask = (1u << page_offset_bits) - 1;
 
     cout << "========================SIMULATION PARAMETERS========================" << endl;
     cout << "Memory size (kB): " << memory_size << endl;
