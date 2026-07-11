@@ -1,6 +1,6 @@
-#include<random>
-#include<iostream>
-#include"../../include/cache/cache_line.hpp"
+#include <random>
+#include <iostream>
+#include "../../include/cache/cache_line.hpp"
 
 using namespace std;
 
@@ -56,7 +56,7 @@ void cache_line::set_tag(size_t tag_)
     this->tag = tag_;
 }
 
-optional<size_t> cache_line::get_tag()
+size_t cache_line::get_tag()
 {
     return this->tag;
 }
