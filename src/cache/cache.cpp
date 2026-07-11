@@ -1,8 +1,8 @@
-#include<iostream>
-#include<optional>
-#include<random>
-#include<stdexcept>
-#include"../../include/cache/cache.hpp"
+#include <iostream>
+#include <optional>
+#include <random>
+#include <stdexcept>
+#include "../../include/cache/cache.hpp"
 
 using namespace std;
 
@@ -99,7 +99,7 @@ bool cache::write_byte(size_t address_, u_int8_t write_data_)
     return false;
 }
 
-pair<cache_line*, size_t> cache::place_line(cache_line* new_line_, size_t address_)
+optional<pair<vector<u_int8_t>, size_t>> cache::place_line(vector<u_int8_t> line_data_, size_t address_)
 {
     size_t index = (address_ >> this->offset_bits) & this->index_mask;
     size_t tag = (address_ >> (this->index_bits + this->offset_bits));
@@ -108,27 +108,29 @@ pair<cache_line*, size_t> cache::place_line(cache_line* new_line_, size_t addres
         // Check if there is a line in the set that is empty (i.e., valid bit is 0)
         if (!this->cache_lines[i]->get_valid())
         {
-            this->cache_lines[i] = new_line_;
+            this->cache_lines[i]->write_line(line_data_, tag);
             this->access_counts[i] = 0;
-            this->cache_lines[i]->set_tag(tag);
-            return make_pair(nullptr, NULL);
+            return nullopt;
         }
     }
 
     size_t line_number_to_replace = this->eviction_policy(index);
-    cache_line* evicted_line = this->cache_lines[line_number_to_replace];
-    this->cache_lines[line_number_to_replace] = new_line_;
+    vector<u_int8_t> evicted_line_data = this->cache_lines[line_number_to_replace]->get_line_data();
+    bool evicted_line_dirty_bit = this->cache_lines[line_number_to_replace]->get_dirty_bit();
+    size_t evicted_line_tag = this->cache_lines[line_number_to_replace]->get_tag();
+
+    this->cache_lines[line_number_to_replace]->write_line(line_data_, tag);
     this->access_counts[line_number_to_replace] = 0;
-    this->cache_lines[line_number_to_replace]->set_tag(tag);
+
 
     // Return the evicted line if the dirty bit is 1, otherwise return nullptr
-    if (evicted_line->get_dirty_bit())
+    if (evicted_line_dirty_bit)
     {
-        size_t evicted_line_address = (evicted_line->get_tag().value() << (this->index_bits + this->offset_bits)) | (index << this->offset_bits);
-        return make_pair(evicted_line, evicted_line_address);
+        size_t evicted_line_address = (evicted_line_tag << (this->index_bits + this->offset_bits)) | (index << this->offset_bits);
+        return make_pair(evicted_line_data, evicted_line_address);
     }
     else   
-        return make_pair(nullptr, NULL);
+        return nullopt;
 }
 
 size_t cache::eviction_policy(size_t index)

@@ -1,9 +1,9 @@
 #pragma once
 
-#include<optional>
-#include<vector>
-#include<random>
-#include"cache_line.hpp"
+#include <optional>
+#include <vector>
+#include <random>
+#include "cache_line.hpp"
 
 class cache
 {
@@ -49,11 +49,11 @@ class cache
 
         /*
         * @brief Place a line of data in the cache
-        * @param new_line_ Pointer to the line that needs to be placed in the cache
+        * @param write_data_ Data of the line that needs to be placed in the cache
         * @param address_ Address of the line that needs to be placed in the cache
-        * @return A pointer to a line that evicted due to cache conflict. Returns `nullptr` if no line was evicted
+        * @return Evicted line's data along with its address
         */
-        std::pair<cache_line*, size_t> place_line(cache_line* new_line_, size_t address_);
+        std::optional<std::pair<std::vector<u_int8_t>, size_t>> place_line(std::vector<u_int8_t> write_data_, size_t address_);
 
         /*
         * @brief Implement different eviction (a.k.a., replacement) policies
