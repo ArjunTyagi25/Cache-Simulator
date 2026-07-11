@@ -1,0 +1,27 @@
+name: test04_direct_mapped_conflict
+description: Two lines map to the same direct-mapped set and evict each other.
+
+config:
+  memory_size: 128
+  page_size: 32
+  cache_size: 16
+  line_size: 4
+  assoc: 1
+  replacement_policy: first_line
+  write_policy: write_back
+  write_allocate: true
+  verbose: false
+  trace_file: trace.txt
+
+expected:
+  result: pass
+  total_accesses: 5
+  total_hits: 2
+  read_hits: 2
+  write_hits: 0
+  total_misses: 3
+  read_misses: 1
+  write_misses: 2
+  total_evictions: 2
+  dirty_evictions: 2
+  non_dirty_evictions: 0

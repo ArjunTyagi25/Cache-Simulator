@@ -1,0 +1,27 @@
+name: test14_random_no_cross_set
+description: Random victim selection must stay within the target set.
+
+config:
+  memory_size: 128
+  page_size: 32
+  cache_size: 16
+  line_size: 4
+  assoc: 2
+  replacement_policy: random
+  write_policy: write_back
+  write_allocate: true
+  verbose: false
+  trace_file: trace.txt
+
+expected:
+  result: pass
+  total_accesses: 7
+  total_hits: 2
+  read_hits: 2
+  write_hits: 0
+  total_misses: 5
+  read_misses: 0
+  write_misses: 5
+  total_evictions: 1
+  dirty_evictions: 1
+  non_dirty_evictions: 0

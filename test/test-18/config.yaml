@@ -1,0 +1,27 @@
+name: test18_mfu_basic
+description: MFU should evict the most frequently used line.
+
+config:
+  memory_size: 128
+  page_size: 32
+  cache_size: 16
+  line_size: 4
+  assoc: 2
+  replacement_policy: MFU
+  write_policy: write_back
+  write_allocate: true
+  verbose: false
+  trace_file: trace.txt
+
+expected:
+  result: pass
+  total_accesses: 7
+  total_hits: 4
+  read_hits: 4
+  write_hits: 0
+  total_misses: 3
+  read_misses: 0
+  write_misses: 3
+  total_evictions: 1
+  dirty_evictions: 1
+  non_dirty_evictions: 0

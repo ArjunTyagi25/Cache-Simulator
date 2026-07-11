@@ -1,0 +1,27 @@
+name: test12_no_allocate_no_eviction
+description: A write miss with write_allocate false should not evict an existing cached line.
+
+config:
+  memory_size: 128
+  page_size: 32
+  cache_size: 8
+  line_size: 4
+  assoc: 1
+  replacement_policy: first_line
+  write_policy: write_through
+  write_allocate: false
+  verbose: false
+  trace_file: trace.txt
+
+expected:
+  result: pass
+  total_accesses: 5
+  total_hits: 1
+  read_hits: 1
+  write_hits: 0
+  total_misses: 4
+  read_misses: 2
+  write_misses: 2
+  total_evictions: 1
+  dirty_evictions: 0
+  non_dirty_evictions: 1

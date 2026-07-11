@@ -1,0 +1,27 @@
+name: test07_page_boundary_eviction
+description: Page-boundary accesses that map to the same set should evict correctly.
+
+config:
+  memory_size: 128
+  page_size: 32
+  cache_size: 8
+  line_size: 4
+  assoc: 1
+  replacement_policy: first_line
+  write_policy: write_back
+  write_allocate: true
+  verbose: false
+  trace_file: trace.txt
+
+expected:
+  result: pass
+  total_accesses: 4
+  total_hits: 0
+  read_hits: 0
+  write_hits: 0
+  total_misses: 4
+  read_misses: 2
+  write_misses: 2
+  total_evictions: 3
+  dirty_evictions: 2
+  non_dirty_evictions: 1

@@ -1,0 +1,27 @@
+name: test19_mfu_dynamic_counts
+description: MFU metadata should update correctly after replacement and later accesses.
+
+config:
+  memory_size: 128
+  page_size: 32
+  cache_size: 16
+  line_size: 4
+  assoc: 2
+  replacement_policy: MFU
+  write_policy: write_back
+  write_allocate: true
+  verbose: false
+  trace_file: trace.txt
+
+expected:
+  result: pass
+  total_accesses: 11
+  total_hits: 7
+  read_hits: 7
+  write_hits: 0
+  total_misses: 4
+  read_misses: 0
+  write_misses: 4
+  total_evictions: 2
+  dirty_evictions: 2
+  non_dirty_evictions: 0

@@ -1,0 +1,27 @@
+name: test09_assoc_no_eviction
+description: Two blocks mapping to same set should coexist in a 2-way set.
+
+config:
+  memory_size: 128
+  page_size: 32
+  cache_size: 16
+  line_size: 4
+  assoc: 2
+  replacement_policy: first_line
+  write_policy: write_back
+  write_allocate: true
+  verbose: false
+  trace_file: trace.txt
+
+expected:
+  result: pass
+  total_accesses: 4
+  total_hits: 2
+  read_hits: 2
+  write_hits: 0
+  total_misses: 2
+  read_misses: 0
+  write_misses: 2
+  total_evictions: 0
+  dirty_evictions: 0
+  non_dirty_evictions: 0
