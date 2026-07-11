@@ -2,7 +2,7 @@
 #include<optional>
 #include<random>
 #include<stdexcept>
-#include<cache.hpp>
+#include"../../include/cache/cache.hpp"
 
 using namespace std;
 
@@ -27,7 +27,7 @@ cache::cache(size_t cache_size_, size_t line_size_, size_t assoc_, string replac
 
     for (size_t i = 0; i < this->number_of_total_lines; i++)
     {
-        line* l = new line(this->line_size, false, "zeros");
+        cache_line* l = new cache_line(this->line_size, false, "zeros");
         this->cache_lines.push_back(l);
         this->access_counts.push_back(0);
     }
@@ -99,7 +99,7 @@ bool cache::write_byte(size_t address_, u_int8_t write_data_)
     return false;
 }
 
-pair<line*, size_t> cache::place_line(line* new_line_, size_t address_)
+pair<cache_line*, size_t> cache::place_line(cache_line* new_line_, size_t address_)
 {
     size_t index = (address_ >> this->offset_bits) & this->index_mask;
     size_t tag = (address_ >> (this->index_bits + this->offset_bits));
@@ -116,7 +116,7 @@ pair<line*, size_t> cache::place_line(line* new_line_, size_t address_)
     }
 
     size_t line_number_to_replace = this->eviction_policy(index);
-    line* evicted_line = this->cache_lines[line_number_to_replace];
+    cache_line* evicted_line = this->cache_lines[line_number_to_replace];
     this->cache_lines[line_number_to_replace] = new_line_;
     this->access_counts[line_number_to_replace] = 0;
     this->cache_lines[line_number_to_replace]->set_tag(tag);
@@ -175,7 +175,7 @@ size_t cache::eviction_policy(size_t index)
         throw invalid_argument("Unknown replacement policy");
 }
 
-vector<line*> cache::get_cache_lines()
+vector<cache_line*> cache::get_cache_lines()
 {
     return this->cache_lines;
 }
@@ -198,7 +198,7 @@ void cache::print_cache_data()
     for (size_t i = 0; i < this->number_of_total_lines; i++)
     {
         cout << i << "\t";
-        this->cache_lines[i]->print_line_data(true);
+        this->cache_lines[i]->print_line_data();
         cout << endl;
     }
 }

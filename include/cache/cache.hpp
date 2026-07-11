@@ -3,7 +3,7 @@
 #include<optional>
 #include<vector>
 #include<random>
-#include<line.hpp>
+#include"cache_line.hpp"
 
 class cache
 {
@@ -53,7 +53,7 @@ class cache
         * @param address_ Address of the line that needs to be placed in the cache
         * @return A pointer to a line that evicted due to cache conflict. Returns `nullptr` if no line was evicted
         */
-        std::pair<line*, size_t> place_line(line* new_line_, size_t address_);
+        std::pair<cache_line*, size_t> place_line(cache_line* new_line_, size_t address_);
 
         /*
         * @brief Implement different eviction (a.k.a., replacement) policies
@@ -66,7 +66,7 @@ class cache
         * @brief Get all the cache lines
         * @return `vector<line*>` containing all the lines of the cache
         */
-        std::vector<line*> get_cache_lines();
+        std::vector<cache_line*> get_cache_lines();
 
         /*
         * @brief Get the data stored in the cache
@@ -92,6 +92,6 @@ class cache
         size_t index_bits;
         size_t index_mask;
         std::mt19937 gen;
-        std::vector<line*> cache_lines;
+        std::vector<cache_line*> cache_lines;
         std::vector<int> access_counts;
 };
