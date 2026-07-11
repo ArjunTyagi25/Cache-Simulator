@@ -43,7 +43,7 @@ int main(int argc, char** argv)
 {
     if (argc < 21)
     {
-        cerr << "Missing arguments. Usage: " << argv[0] << " --memory_size <memory size in kB> --page_size <page size in kB> --cache_size <cache size in kB> --line_size <line size in kB> --assoc <associativity> --replacement_policy <specify the replacement policy for the cache> --trace_file <path to trace file> --write_policy <write_back/write_through> --write_allocate<true/false> --verbose true" << endl;
+        cerr << "Missing arguments. Usage: " << argv[0] << " --memory_size <memory size in B> --page_size <page size in B> --cache_size <cache size in B> --line_size <line size in B> --assoc <associativity> --replacement_policy <specify the replacement policy for the cache> --trace_file <path to trace file> --write_policy <write_back/write_through> --write_allocate<true/false> --verbose true" << endl;
         return -1;
     }
     size_t memory_size = 8192;
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
             write_allocate = (!strcmp(argv[i+1], "true")); 
         else
         {
-            cerr << "Undefined flag. Usage: " << argv[0] << " --memory_size <memory size in kB> --page_size <page size in kB> --cache_size <cache size in kB> --line_size <line size in kB> --assoc <associativity> --replacement_policy <specify the replacement policy for the cache> --trace_file <path to trace file>" << endl;
+            cerr << "Undefined flag. Usage: " << argv[0] << " --memory_size <memory size in B> --page_size <page size in B> --cache_size <cache size in B> --line_size <line size in B> --assoc <associativity> --replacement_policy <specify the replacement policy for the cache> --write_policy <write_back/write_through> --write_allocate<true/false> --trace_file <path to trace file>" << endl;
             return -1;
         }        
     }
