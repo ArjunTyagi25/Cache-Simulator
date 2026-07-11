@@ -89,6 +89,7 @@ int main(int argc, char** argv)
     size_t line_offset_bits = log2(line_size);
     size_t page_offset_bits = log2(page_size);
     size_t index_bits = log2(cache_size/(line_size*assoc));
+    bool test_case_passed = true;
 
     cout << "========================SIMULATION PARAMETERS========================" << endl;
     cout << "Memory size (kB): " << memory_size << endl;
@@ -121,19 +122,31 @@ int main(int argc, char** argv)
     {
         string operation = trace[lines][0];
         size_t address = static_cast<size_t>(stoul(trace[lines][1], nullptr, 16));
-        size_t data;
-        if (operation == "W")
-            data = static_cast<size_t>(stoul(trace[lines][2], nullptr, 16));
+        size_t data = static_cast<size_t>(stoul(trace[lines][2], nullptr, 16));
 
         if (operation == "R")
         {
-            mem_subsys->read(address);
+            size_t read_data = static_cast<size_t>(mem_subsys->read(address));
+            if (read_data == data)
+            {
+                cout << "Read data (" << hex << read_data << ") matches with the expected value (" << hex << data << ")." << endl;
+            }
+            else
+            {
+                cout << "Read data (" << hex << read_data << ") different from the expected value (" << hex << data << ")." << endl;
+                test_case_passed = false;
+            }
         }
         else if (operation == "W")
         {
             mem_subsys->write(address, data);
         }
     }
+
+    if (test_case_passed)
+        cout << "The test case with the given trace passed successfully!" << endl;
+    else
+        cout << "The test case with the given trace failed! Check the logs." << endl;
 
     mem_subsys->report_stats();
     
