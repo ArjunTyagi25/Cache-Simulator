@@ -43,12 +43,12 @@ void cache_line::write_byte(u_int8_t write_data_, size_t tag_, size_t offset_)
     this->dirty = true;
 }
 
-void cache_line::write_line(vector<u_int8_t> write_data_, size_t tag_)
+void cache_line::write_line(vector<u_int8_t> write_data_, size_t tag_, bool dirty_bit_)
 {
     this->line_data = write_data_;
     this->tag = tag_;
     this->valid = true;
-    this->dirty = true;
+    this->dirty = dirty_bit_;
 }
 
 void cache_line::set_tag(size_t tag_)

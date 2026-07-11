@@ -41,8 +41,9 @@ class cache_line
         * @brief Update the entire line's data
         * @param write_data_ New line's data to be written
         * @param tag_ Associated tag
+        * @param dirty_bit_ Dirty bit of the line. false if no changes have been made to the line's content; true if the line has been updated
         */
-        void write_line(std::vector<u_int8_t> write_data_, size_t tag_);
+        void write_line(std::vector<u_int8_t> write_data_, size_t tag_, bool dirty_bit_);
 
         /*
         * @brief Returns the line's tag
