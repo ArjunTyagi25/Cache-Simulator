@@ -11,7 +11,7 @@ config:
   write_policy: write_through
   write_allocate: false
   verbose: false
-  trace_file: trace.txt
+  trace_file: ../test/test-12/trace.txt
 
 expected:
   result: pass
