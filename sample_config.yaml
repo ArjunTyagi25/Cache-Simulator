@@ -4,9 +4,12 @@ simulation:
   verbose: false
   trace_file: ../test/sample_trace.txt
 
-memory:
-  memory_size: 128
-  page_size: 32
+memory_hierarchy:
+  levels:
+    - name: "Main Memory"
+      memory_size: 128
+      page_size: 32
+      line_size: 4
 
 cache_hierarchy:
   levels:
