@@ -3,6 +3,8 @@
 #include <string>
 #include "./cache/cache.hpp"
 #include "./memory/memory.hpp"
+#include "./cache/cache_info.hpp"
+#include "./memory/memory_info.hpp"
 
 class memory_subsystem
 {
@@ -19,14 +21,10 @@ class memory_subsystem
         * @param write_allocate_ Enable/disable write allocate in L1 cache
         * @param verbose_ Enable/disable verbose mode
         */
-        memory_subsystem(size_t main_memory_size_, 
-                         size_t page_size_,
-                         size_t L1_cache_size_,
-                         size_t line_size_,
-                         size_t assoc_,
-                         std::string replacement_policy_,
-                         std::string write_policy_,
-                         bool write_allocate_,
+        memory_subsystem(size_t num_memory_levels_,
+                         std::vector<MemoryInfo> memory_infos_,
+                         size_t num_cache_levels_,
+                         std::vector<CacheInfo> cache_infos_,
                          bool verbose_);
         
         /*
@@ -49,25 +47,32 @@ class memory_subsystem
         void report_stats();
 
     private:
-        size_t main_memory_size;
-        size_t page_size;
-        size_t L1_cache_size;
-        size_t line_size;
-        size_t assoc;
-        std::string replacement_policy;
-        std::string write_policy;
-        bool write_allocate;
+        size_t num_memory_levels;
+        std::vector<std::string> main_memory_names;
+        std::vector<size_t> main_memory_sizes;
+        std::vector<size_t> page_sizes;
+        std::vector<size_t> main_memory_line_sizes;
+
+        size_t num_cache_levels;
+        std::vector<std::string> cache_names;
+        std::vector<size_t> cache_sizes;
+        std::vector<size_t> cache_line_sizes;
+        std::vector<size_t> assocs;
+        std::vector<std::string> replacement_policies;
+        std::vector<std::string> write_policies;
+        std::vector<bool> write_allocates;
         bool verbose;
-        cache* L1;
-        memory* main_memory;
-
-        size_t line_offset_bits;
-        size_t line_offset_mask;
         
-        size_t index_bits;
-        size_t index_mask;
+        std::vector<cache*> caches;
+        std::vector<memory*> main_memories;
 
-        size_t page_offset_bits;
-        size_t page_offset_mask;
+        std::vector<size_t> line_offset_bits;
+        std::vector<size_t> line_offset_masks;
+        
+        std::vector<size_t> index_bits;
+        std::vector<size_t> index_masks;
+
+        std::vector<size_t> page_offset_bits;
+        std::vector<size_t> page_offset_masks;
 };
 
