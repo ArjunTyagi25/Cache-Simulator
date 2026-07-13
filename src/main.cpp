@@ -51,10 +51,10 @@ vector<MemoryInfo>extract_memory_level_info(vector<string> memory_info_string_)
         while (std::getline(ss, token, ',')) 
             result.push_back(token);
 
-        if (result.size() != 3)
+        if (result.size() != 4)
         {
             throw invalid_argument(
-                "Invalid memory level config. Expected 3 arguments: " + memory_level
+                "Invalid memory level config. Expected 4 arguments: " + memory_level
             );
         }
 
@@ -107,7 +107,7 @@ vector<CacheInfo> extract_cache_level_info(vector<string> cache_info_string_)
 
 int main(int argc, char** argv)
 {
-    if (argc < 21)
+    if (argc < 13)
     {
         cerr << "Missing arguments. Usage: " << argv[0] << " --num_memory_levels <number of memory levels> --memory_level <details of memory level> --num_cache_levels <number of levels of caches> --cache_level <details about cache level> --trace_file <path to trace file> --verbose true" << endl;
         return -1;
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
     string trace_file_path = "../test/trace.txt";
     bool verbose = false;
 
-    for (int i = 1; i < 20; i += 2)
+    for (int i = 1; i < argc; i += 2)
     {
         if (!strcmp(argv[i], "--num_memory_levels"))
             num_memory_levels = strtoull(argv[i+1], NULL, 10);
@@ -148,12 +148,12 @@ int main(int argc, char** argv)
 
     cout << "========================SIMULATION PARAMETERS========================" << endl;
     cout << "Number of Levels of Memory: " << num_memory_levels << endl;
-    for (size_t level = 0; level < num_cache_levels; level++)
+    for (size_t level = 0; level < num_memory_levels; level++)
     {
         cout << Memory_Infos[level].name << "'s Details" << endl;
-        cout << "Memory Size (B): " << Memory_Infos[level].memory_size << endl;
-        cout << "Page Size (B): " << Memory_Infos[level].page_size << endl;
-        cout << "Line Size (B): " << Memory_Infos[level].line_size << endl;
+        cout << "\tMemory Size (B): " << Memory_Infos[level].memory_size << endl;
+        cout << "\tPage Size (B): " << Memory_Infos[level].page_size << endl;
+        cout << "\tLine Size (B): " << Memory_Infos[level].line_size << endl;
     }
     cout << "Number of Levels of Cache: " << num_cache_levels << endl;
     for (size_t level = 0; level < num_cache_levels; level++)
@@ -181,7 +181,7 @@ int main(int argc, char** argv)
 
     vector<vector<string>> trace = read_trace_file(trace_file_path);
 
-    memory_subsystem* mem_subsys = new memory_subsystem(Memory_Infos, Cache_Infos, verbose);
+    memory_subsystem* mem_subsys = new memory_subsystem(num_memory_levels, Memory_Infos, num_cache_levels, Cache_Infos, verbose);
     
     for (size_t lines = 0; lines < trace.size(); lines++)
     {
