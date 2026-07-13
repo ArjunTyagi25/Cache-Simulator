@@ -1,27 +1,27 @@
-name: sample_test
-description: This is a sample configuration file
+simulation:
+  name: sample_test
+  description: This is a sample configuration file
+  verbose: false
+  trace_file: ../test/sample_trace.txt
 
-config:
+memory:
   memory_size: 128
   page_size: 32
-  cache_size: 16
-  line_size: 4
-  assoc: 1
-  replacement_policy: first_line
-  write_policy: write_back
-  write_allocate: true
-  verbose: true
-  trace_file: ../test/sample/trace.txt
 
-expected:
-  result: pass
-  total_accesses: 2
-  total_hits: 1
-  read_hits: 1
-  write_hits: 0
-  total_misses: 1
-  read_misses: 0
-  write_misses: 1
-  total_evictions: 0
-  dirty_evictions: 0
-  non_dirty_evictions: 0
+cache_hierarchy:
+  levels:
+    - name: L1
+      cache_size: 16
+      line_size: 4
+      assoc: 1
+      replacement_policy: first_line
+      write_policy: write_back
+      write_allocate: true
+
+    - name: L2
+      cache_size: 32
+      line_size: 4
+      assoc: 2
+      replacement_policy: LFU
+      write_policy: write_back
+      write_allocate: true
