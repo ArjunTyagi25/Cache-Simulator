@@ -92,10 +92,10 @@ int main(int argc, char** argv)
     bool test_case_passed = true;
 
     cout << "========================SIMULATION PARAMETERS========================" << endl;
-    cout << "Memory size (kB): " << memory_size << endl;
-    cout << "Page size (kB): " << page_size << endl;
-    cout << "Cache size (kB): " << cache_size << endl;
-    cout << "Line size (kB): " << line_size << endl;
+    cout << "Memory size (B): " << memory_size << endl;
+    cout << "Page size (B): " << page_size << endl;
+    cout << "Cache size (B): " << cache_size << endl;
+    cout << "Line size (B): " << line_size << endl;
     cout << "Associativity: " << assoc << endl;
     cout << "Replacement Policy: " << replacement_policy << endl;
     cout << "Trace Path: " << trace_file_path << endl;
