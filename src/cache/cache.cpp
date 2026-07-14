@@ -115,7 +115,7 @@ void cache::update(vector<u_int8_t> line_data_, size_t address_, bool dirty_bit_
     }
 }
 
-optional<tuple<vector<u_int8_t>, size_t, bool>> cache::place_line(vector<u_int8_t> line_data_, size_t address_, bool dirty_bit_)
+optional<tuple<vector<u_int8_t>, size_t, bool>> cache::insert_line(vector<u_int8_t> line_data_, size_t address_, bool dirty_bit_)
 {
     size_t index = (address_ >> this->offset_bits) & this->index_mask;
     size_t tag = (address_ >> (this->index_bits + this->offset_bits));

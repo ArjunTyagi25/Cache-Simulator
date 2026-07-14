@@ -65,7 +65,7 @@ class cache
         * @param dirty_bit_ Dirty bit of the line that needs to be placed in the cache
         * @return Evicted line's data along with its address
         */
-        std::optional<std::tuple<std::vector<u_int8_t>, size_t, bool>> place_line(std::vector<u_int8_t> write_data_, size_t address_, bool dirty_bit_);
+        std::optional<std::tuple<std::vector<u_int8_t>, size_t, bool>> insert_line(std::vector<u_int8_t> write_data_, size_t address_, bool dirty_bit_);
 
         /*
         * @brief Implement different eviction (a.k.a., replacement) policies
