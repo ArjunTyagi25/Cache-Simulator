@@ -36,11 +36,11 @@ class cache
         cache(size_t cache_size_, size_t line_size_, size_t assoc_, std::string replacement_policy_);
         
         /*
-        * @brief Find a byte of data in the cache
+        * @brief Read a byte of data in the cache
         * @param address_ Address of the byte to be read
         * @return `uint8_t` on read hit, `nullopt` on read miss 
         */
-        std::optional<uint8_t> find_byte(size_t address_);
+        std::optional<uint8_t> read_byte(size_t address_);
 
         /*
         * @brief Write a byte of data in the cache
@@ -51,13 +51,21 @@ class cache
         bool write_byte(size_t address_, u_int8_t write_data_);
 
         /*
+        * @brief Update a cache line (assuming it is already present in the cache)
+        * @param line_data_ Data of the line that is to be updated
+        * @param address_ Address of the line; used to extract index and tag
+        * @param dirty_bit_ Dirty bit of the line that is to be updated
+        */
+        void update(std::vector<u_int8_t> line_data_, size_t address_, bool dirty_bit_);
+
+        /*
         * @brief Place a line of data in the cache
         * @param write_data_ Data of the line that needs to be placed in the cache
         * @param address_ Address of the line that needs to be placed in the cache
         * @param dirty_bit_ Dirty bit of the line that needs to be placed in the cache
         * @return Evicted line's data along with its address
         */
-        std::optional<std::pair<std::vector<u_int8_t>, size_t>> place_line(std::vector<u_int8_t> write_data_, size_t address_, bool dirty_bit_);
+        std::optional<std::tuple<std::vector<u_int8_t>, size_t, bool>> place_line(std::vector<u_int8_t> write_data_, size_t address_, bool dirty_bit_);
 
         /*
         * @brief Implement different eviction (a.k.a., replacement) policies
@@ -66,6 +74,13 @@ class cache
         */
         size_t eviction_policy(size_t index);
 
+        /*
+        * @brief Get a cache line
+        * @param address_ Address of any byte that is in the line we want to fetch
+        * @return Pointer to cache_line containing the address_
+        */
+        std::optional<cache_line*> get_cache_line(size_t address_);
+        
         /*
         * @brief Get all the cache lines
         * @return `vector<line*>` containing all the lines of the cache
