@@ -42,16 +42,31 @@ class memory_subsystem
         void write(size_t address_, u_int8_t data_);
 
         /*
+        * @brief Fill a cache line into the specified cache level
+        * @param line_data_ Data bytes of the cache line to be installed.
+        * @param address_ Address belonging to the cache line being installed.
+        * @param cache_level_ Cache level where the line should be installed.
+        */
+        void fill_cache_line(std::vector<u_int8_t> line_data_, size_t address_, size_t cache_level_);
+
+        /*
+        * @brief Invalidate matching copies of a cache line in upper cache levels.
+        * @param address_ Address belonging to the evicted cache line.
+        * @param level_ Cache level that evicted the line; all levels above this are checked.
+        */
+        void invalidate_upper_level_copies(size_t address_, size_t level_);
+
+        /*
         @brief Report all the cache statistics
         */
         void report_stats();
 
     private:
         size_t num_memory_levels;
-        std::vector<std::string> main_memory_names;
-        std::vector<size_t> main_memory_sizes;
+        std::vector<std::string> memory_names;
+        std::vector<size_t> memory_sizes;
         std::vector<size_t> page_sizes;
-        std::vector<size_t> main_memory_line_sizes;
+        std::vector<size_t> memory_line_sizes;
 
         size_t num_cache_levels;
         std::vector<std::string> cache_names;
@@ -64,10 +79,13 @@ class memory_subsystem
         bool verbose;
         
         std::vector<cache*> caches;
-        std::vector<memory*> main_memories;
+        std::vector<memory*> memories;
 
-        std::vector<size_t> line_offset_bits;
-        std::vector<size_t> line_offset_masks;
+        std::vector<size_t> memory_line_offset_bits;
+        std::vector<size_t> memory_line_offset_masks;
+
+        std::vector<size_t> cache_line_offset_bits;
+        std::vector<size_t> cache_line_offset_masks;
         
         std::vector<size_t> index_bits;
         std::vector<size_t> index_masks;
