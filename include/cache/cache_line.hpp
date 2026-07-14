@@ -58,6 +58,12 @@ class cache_line
         void set_tag(size_t tag_);
 
         /*
+        * @brief Set the line's valid bit
+        * @param valid_ value of valid bit that you wanna set (true/false)
+        */
+        void set_valid(bool valid_);
+
+        /*
         * @brief Get the valid bit of the line
         * @return Returns the valid bit of type `bool`
         */
