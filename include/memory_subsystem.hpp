@@ -42,21 +42,6 @@ class memory_subsystem
         void write(size_t address_, u_int8_t data_);
 
         /*
-        * @brief Fill a cache line into the specified cache level
-        * @param line_data_ Data bytes of the cache line to be installed.
-        * @param address_ Address belonging to the cache line being installed.
-        * @param cache_level_ Cache level where the line should be installed.
-        */
-        void fill_cache_line(std::vector<u_int8_t> line_data_, size_t address_, size_t cache_level_);
-
-        /*
-        * @brief Invalidate matching copies of a cache line in upper cache levels.
-        * @param address_ Address belonging to the evicted cache line.
-        * @param level_ Cache level that evicted the line; all levels above this are checked.
-        */
-        void invalidate_upper_level_copies(size_t address_, size_t level_);
-
-        /*
         @brief Report all the cache statistics
         */
         void report_stats();
@@ -92,5 +77,20 @@ class memory_subsystem
 
         std::vector<size_t> page_offset_bits;
         std::vector<size_t> page_offset_masks;
+
+        /*
+        * @brief Fill a cache line into the specified cache level
+        * @param line_data_ Data bytes of the cache line to be installed.
+        * @param address_ Address belonging to the cache line being installed.
+        * @param cache_level_ Cache level where the line should be installed.
+        */
+        void fill_cache_line(std::vector<u_int8_t> line_data_, size_t address_, size_t cache_level_);
+
+        /*
+        * @brief Invalidate matching copies of a cache line in upper cache levels.
+        * @param address_ Address belonging to the evicted cache line.
+        * @param level_ Cache level that evicted the line; all levels above this are checked.
+        */
+        void invalidate_upper_level_copies(size_t address_, size_t level_);
 };
 
