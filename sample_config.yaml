@@ -6,7 +6,7 @@ simulation:
 
 memory_hierarchy:
   levels:
-    - name: "Main Memory"
+    - name: "MAIN"
       memory_size: 128
       page_size: 32
       line_size: 4
