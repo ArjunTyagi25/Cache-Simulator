@@ -1,6 +1,6 @@
 simulation:
-  name: read_06_inclusive_invalidation
-  description: L2 eviction should invalidate the corresponding L1 copy in an inclusive hierarchy.
+  name: test_33_l1_write_through_updates_l2
+  description: L1 write-through should immediately update the lower-level cache.
   verbose: true
   trace_file: ../test/test-26/trace.txt
 
@@ -14,22 +14,14 @@ memory_hierarchy:
 cache_hierarchy:
   levels:
     - name: L1
-      cache_size: 8
-      line_size: 4
-      assoc: 1
-      replacement_policy: first_line
-      write_policy: write_back
-      write_allocate: true
-
-    - name: L2
       cache_size: 4
       line_size: 4
       assoc: 1
       replacement_policy: first_line
-      write_policy: write_back
+      write_policy: write_through
       write_allocate: true
 
-    - name: L3
+    - name: L2
       cache_size: 8
       line_size: 4
       assoc: 1

@@ -1,6 +1,6 @@
 simulation:
-  name: read_05_miss_all_levels
-  description: Line is evicted from every cache level, so later read goes to main memory again.
+  name: test_32_dirty_upper_level_invalidation
+  description: L2 eviction should invalidate dirty matching L1 copy and preserve the updated data.
   verbose: true
   trace_file: ../test/test-25/trace.txt
 
@@ -14,15 +14,15 @@ memory_hierarchy:
 cache_hierarchy:
   levels:
     - name: L1
-      cache_size: 4
+      cache_size: 8
       line_size: 4
-      assoc: 1
+      assoc: 2
       replacement_policy: first_line
       write_policy: write_back
       write_allocate: true
 
     - name: L2
-      cache_size: 4
+      cache_size: 8
       line_size: 4
       assoc: 1
       replacement_policy: first_line
@@ -30,7 +30,7 @@ cache_hierarchy:
       write_allocate: true
 
     - name: L3
-      cache_size: 4
+      cache_size: 16
       line_size: 4
       assoc: 1
       replacement_policy: first_line

@@ -1,17 +1,25 @@
-name: test15_random_four_way_range
-description: Random replacement in a 4-way set should not evict from another set.
-
-config:
-  memory_size: 128
-  page_size: 32
-  cache_size: 32
-  line_size: 4
-  assoc: 4
-  replacement_policy: random
-  write_policy: write_back
-  write_allocate: true
+simulation:
+  name: test15_random_four_way_range
+  description: Random replacement in a 4-way set should not evict from another set.
   verbose: false
   trace_file: ../test/test-15/trace.txt
+
+memory_hierarchy:
+  levels:
+    - name: "MAIN"
+      memory_size: 128
+      page_size: 32
+      line_size: 4
+
+cache_hierarchy:
+  levels:
+    - name: L1
+      cache_size: 32
+      line_size: 4
+      assoc: 4
+      replacement_policy: random
+      write_policy: write_back
+      write_allocate: true
 
 expected:
   result: pass

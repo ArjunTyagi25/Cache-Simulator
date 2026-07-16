@@ -1,17 +1,25 @@
-name: test13b_write_through_clean_evictions
-description: Write-through policy should evict clean lines because memory is updated immediately.
-
-config:
-  memory_size: 128
-  page_size: 32
-  cache_size: 8
-  line_size: 4
-  assoc: 1
-  replacement_policy: first_line
-  write_policy: write_through
-  write_allocate: true
+simulation:
+  name: test13b_write_through_clean_evictions
+  description: Write-through policy should evict clean lines because memory is updated immediately.
   verbose: false
   trace_file: ../test/test-13/trace.txt
+
+memory_hierarchy:
+  levels:
+    - name: "MAIN"
+      memory_size: 128
+      page_size: 32
+      line_size: 4
+
+cache_hierarchy:
+  levels:
+    - name: L1
+      cache_size: 8
+      line_size: 4
+      assoc: 1
+      replacement_policy: first_line
+      write_policy: write_through
+      write_allocate: true
 
 expected:
   result: pass

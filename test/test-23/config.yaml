@@ -1,6 +1,6 @@
 simulation:
-  name: read_03_l2_hit
-  description: Line is evicted from L1 but remains in L2.
+  name: test_30_dirty_l2_eviction_to_l3
+  description: Dirty L2 eviction should update the existing L3 copy.
   verbose: true
   trace_file: ../test/test-23/trace.txt
 
@@ -22,6 +22,14 @@ cache_hierarchy:
       write_allocate: true
 
     - name: L2
+      cache_size: 4
+      line_size: 4
+      assoc: 1
+      replacement_policy: first_line
+      write_policy: write_back
+      write_allocate: true
+
+    - name: L3
       cache_size: 8
       line_size: 4
       assoc: 1

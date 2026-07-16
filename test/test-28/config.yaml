@@ -1,8 +1,8 @@
 simulation:
-  name: test_31_dirty_llc_eviction_to_memory
-  description: Dirty last-level cache eviction should update main memory.
+  name: test_35_upper_write_allocate_lower_no_write_allocate
+  description: L1 write-allocate should still preserve inclusion when lower levels are no-write-allocate.
   verbose: true
-  trace_file: ../test/test-24/trace.txt
+  trace_file: ../test/test-28/trace.txt
 
 memory_hierarchy:
   levels:
@@ -26,5 +26,13 @@ cache_hierarchy:
       line_size: 4
       assoc: 1
       replacement_policy: first_line
+      write_policy: write_through
+      write_allocate: false
+
+    - name: L3
+      cache_size: 8
+      line_size: 4
+      assoc: 1
+      replacement_policy: first_line
       write_policy: write_back
-      write_allocate: true
+      write_allocate: false

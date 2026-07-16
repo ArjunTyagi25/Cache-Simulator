@@ -1,8 +1,8 @@
 simulation:
-  name: test_28_same_line_multiple_writes
-  description: Multiple writes to different byte offsets within the same cache line.
+  name: test_34_l1_no_write_allocate
+  description: L1 write miss should not allocate in L1 when no-write-allocate is enabled.
   verbose: true
-  trace_file: ../test/test-21/trace.txt
+  trace_file: ../test/test-27/trace.txt
 
 memory_hierarchy:
   levels:
@@ -14,15 +14,15 @@ memory_hierarchy:
 cache_hierarchy:
   levels:
     - name: L1
-      cache_size: 16
+      cache_size: 4
       line_size: 4
       assoc: 1
       replacement_policy: first_line
-      write_policy: write_back
-      write_allocate: true
+      write_policy: write_through
+      write_allocate: false
 
     - name: L2
-      cache_size: 32
+      cache_size: 8
       line_size: 4
       assoc: 1
       replacement_policy: first_line
