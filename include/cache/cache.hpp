@@ -43,13 +43,13 @@ class cache
         std::optional<uint8_t> read_byte(size_t address_);
 
         /*
-        * @brief Write a byte of data in the cache
-        * @param address_ Address of the byte to be written
-        * @param write_data Data to be written at the given address
-        * @return `true` on write hit, `false` on write miss  
+        * @brief Check if the cache holds an address. 
+        * @details This is different from read_byte as find_byte() would not update the cache statistics. Used for write operations.
+        * @param address_ Address of the byte that needs to be checked
+        * @return `true` if found, `false` if not found
         */
-        bool write_byte(size_t address_, u_int8_t write_data_);
-
+        bool find_byte(size_t address_);
+ 
         /*
         * @brief Update a cache line (assuming it is already present in the cache)
         * @param line_data_ Data of the line that is to be updated
@@ -92,6 +92,17 @@ class cache
         * @return vector<vector<u_int8_t>> containing all the data of the cache
         */
         std::vector<std::vector<u_int8_t>> get_cache_data();
+
+        /*
+        * @brief Update the cache statistics in case of a write hit
+        * @brief address_ Address of the byte that was accesses. Used to extract tag and index which are then used to update the access count of the specific cache line
+        */
+        void update_write_hit_stats(size_t address_);
+
+        /*
+        * @brief Updat the cache statistics in case of a write miss
+        */
+        void update_write_miss_stats();
 
         /*
         @brief Print the cache data, including the metadata like tags, dirty bit, valid bit, etc
