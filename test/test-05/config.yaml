@@ -1,17 +1,25 @@
-name: test05_dirty_eviction_multibyte
-description: Dirty cache line with multiple modified bytes is evicted and later fetched back correctly.
-
-config:
-  memory_size: 128
-  page_size: 32
-  cache_size: 8
-  line_size: 4
-  assoc: 1
-  replacement_policy: first_line
-  write_policy: write_back
-  write_allocate: true
-  verbose: false
+simulation:
+  name: test05_dirty_eviction_multibyte
+  description: Dirty cache line with multiple modified bytes is evicted and later fetched back correctly.
+  verbose: true
   trace_file: ../test/test-05/trace.txt
+
+memory_hierarchy:
+  levels:
+    - name: "MAIN"
+      memory_size: 128
+      page_size: 32
+      line_size: 4
+
+cache_hierarchy:
+  levels:
+    - name: L1
+      cache_size: 8
+      line_size: 4
+      assoc: 1
+      replacement_policy: first_line
+      write_policy: write_back
+      write_allocate: true
 
 expected:
   result: pass

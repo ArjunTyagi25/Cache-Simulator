@@ -56,6 +56,11 @@ void cache_line::set_tag(size_t tag_)
     this->tag = tag_;
 }
 
+void cache_line::set_valid(bool valid_)
+{
+    this->valid = valid_;
+}
+
 size_t cache_line::get_tag()
 {
     return this->tag;

@@ -39,70 +39,135 @@ vector<vector<string>> read_trace_file(string trace_file_path)
     return trace;
 }
 
+vector<MemoryInfo>extract_memory_level_info(vector<string> memory_info_string_)
+{
+    vector<MemoryInfo> Memory_Infos;
+    for (string memory_level : memory_info_string_)
+    {
+        stringstream ss(memory_level);
+        string token;
+        vector<string> result;
+
+        while (std::getline(ss, token, ',')) 
+            result.push_back(token);
+
+        if (result.size() != 4)
+        {
+            throw invalid_argument(
+                "Invalid memory level config. Expected 4 arguments: " + memory_level
+            );
+        }
+
+        struct MemoryInfo memory_info;
+        memory_info.name = result[0];
+        memory_info.memory_size = stoul(result[1]);
+        memory_info.page_size = stoul(result[2]);
+        memory_info.line_size = stoul(result[3]);
+        
+        
+        Memory_Infos.push_back(memory_info);
+    }
+    
+    return Memory_Infos;
+}
+
+vector<CacheInfo> extract_cache_level_info(vector<string> cache_info_string_)
+{
+    vector<CacheInfo> Cache_Infos;
+    for (string cache_level : cache_info_string_)
+    {
+        stringstream ss(cache_level);
+        string token;
+        vector<string> result;
+
+        while (std::getline(ss, token, ',')) 
+            result.push_back(token);
+
+        if (result.size() != 7)
+        {
+            throw invalid_argument(
+                "Invalid cache level config. Expected 7 arguments: " + cache_level
+            );
+        }
+
+        struct CacheInfo cache_info;
+        cache_info.name = result[0];
+        cache_info.cache_size = stoul(result[1]);
+        cache_info.line_size = stoul(result[2]);
+        cache_info.assoc = stoul(result[3]);
+        cache_info.replacement_policy = result[4];
+        cache_info.write_policy = result[5];
+        cache_info.write_allocate = (result[6] == "true");
+        
+        Cache_Infos.push_back(cache_info);
+    }
+    
+    return Cache_Infos;
+}
+
 int main(int argc, char** argv)
 {
-    if (argc < 21)
+    if (argc < 13)
     {
-        cerr << "Missing arguments. Usage: " << argv[0] << " --memory_size <memory size in B> --page_size <page size in B> --cache_size <cache size in B> --line_size <line size in B> --assoc <associativity> --replacement_policy <specify the replacement policy for the cache> --trace_file <path to trace file> --write_policy <write_back/write_through> --write_allocate <true/false> --verbose true" << endl;
+        cerr << "Missing arguments. Usage: " << argv[0] << " --num_memory_levels <number of memory levels> --memory_level <details of memory level> --num_cache_levels <number of levels of caches> --cache_level <details about cache level> --trace_file <path to trace file> --verbose true" << endl;
         return -1;
     }
-    size_t memory_size = 8192;
-    size_t page_size = 4096;
-    size_t cache_size = 64;
-    size_t line_size = 8;
-    size_t assoc = 4;
-    string replacement_policy = "first_line";
-    string write_policy = "write_back";
-    bool write_allocate = false;
+
+    size_t num_memory_levels = 1;
+    vector<string> memory_info_string;
+    size_t num_cache_levels = 2;
+    vector<string> cache_info_string;
     string trace_file_path = "../test/trace.txt";
     bool verbose = false;
 
-    for (int i = 1; i < 20; i += 2)
+    for (int i = 1; i < argc; i += 2)
     {
-        if (!strcmp(argv[i], "--memory_size"))
-            memory_size = strtoull(argv[i+1], NULL, 10);
-        else if (!strcmp(argv[i], "--page_size"))
-            page_size = strtoull(argv[i+1], NULL, 10); 
-        else if (!strcmp(argv[i], "--cache_size"))
-            cache_size = strtoull(argv[i+1], NULL, 10);
-        else if (!strcmp(argv[i], "--line_size"))
-            line_size = strtoull(argv[i+1], NULL, 10); 
-        else if (!strcmp(argv[i], "--assoc"))
-            assoc = strtoull(argv[i+1], NULL, 10); 
-        else if (!strcmp(argv[i], "--replacement_policy"))
-            replacement_policy = argv[i+1];
+        if (!strcmp(argv[i], "--num_memory_levels"))
+            num_memory_levels = strtoull(argv[i+1], NULL, 10);
+        else if (!strcmp(argv[i], "--memory_level"))
+            memory_info_string.push_back(argv[i+1]);
+        else if (!strcmp(argv[i], "--num_cache_levels"))
+            num_cache_levels = strtoull(argv[i+1], NULL, 10);
+        else if (!strcmp(argv[i], "--cache_level"))
+            cache_info_string.push_back(argv[i+1]);
         else if (!strcmp(argv[i], "--trace_file"))
             trace_file_path = argv[i+1];
         else if (!strcmp(argv[i], "--verbose"))
-            verbose = (!strcmp(argv[i+1], "true"));
-        else if (!strcmp(argv[i], "--write_policy"))
-            write_policy= argv[i+1];
-        else if (!strcmp(argv[i], "--write_allocate"))
-            write_allocate = (!strcmp(argv[i+1], "true")); 
+            verbose = (!strcmp(argv[i+1], "true")); 
         else
         {
-            cerr << "Undefined flag. Usage: " << argv[0] << " --memory_size <memory size in B> --page_size <page size in B> --cache_size <cache size in B> --line_size <line size in B> --assoc <associativity> --replacement_policy <specify the replacement policy for the cache> --write_policy <write_back/write_through> --write_allocate <true/false> --trace_file <path to trace file>" << endl;
+            cerr << "Undefined flag. Usage: " << argv[0] << " --memory_size <memory size in B> --page_size <page size in B> --num_cache_levels <number of levels of caches> --cache_level <details about cache level> --trace_file <path to trace file> --verbose true" << endl;
             return -1;
         }        
     }
 
-    size_t line_offset_bits = log2(line_size);
-    size_t page_offset_bits = log2(page_size);
-    size_t index_bits = log2(cache_size/(line_size*assoc));
+    vector<MemoryInfo> Memory_Infos = extract_memory_level_info(memory_info_string);
+    vector<CacheInfo> Cache_Infos = extract_cache_level_info(cache_info_string);
+    
     bool test_case_passed = true;
 
     cout << "========================SIMULATION PARAMETERS========================" << endl;
-    cout << "Memory size (B): " << memory_size << endl;
-    cout << "Page size (B): " << page_size << endl;
-    cout << "Cache size (B): " << cache_size << endl;
-    cout << "Line size (B): " << line_size << endl;
-    cout << "Associativity: " << assoc << endl;
-    cout << "Replacement Policy: " << replacement_policy << endl;
+    cout << "Number of Levels of Memory: " << num_memory_levels << endl;
+    for (size_t level = 0; level < num_memory_levels; level++)
+    {
+        cout << Memory_Infos[level].name << "'s Details" << endl;
+        cout << "\tMemory Size (B): " << Memory_Infos[level].memory_size << endl;
+        cout << "\tPage Size (B): " << Memory_Infos[level].page_size << endl;
+        cout << "\tLine Size (B): " << Memory_Infos[level].line_size << endl;
+    }
+    cout << "Number of Levels of Cache: " << num_cache_levels << endl;
+    for (size_t level = 0; level < num_cache_levels; level++)
+    {
+        cout << Cache_Infos[level].name << "'s Details" << endl;
+        cout << "\tCache size (B): " << Cache_Infos[level].cache_size << endl;
+        cout << "\tLine size (B): " << Cache_Infos[level].line_size << endl;
+        cout << "\tAssociativity: " << Cache_Infos[level].assoc << endl;
+        cout << "\tReplacement Policy: " << Cache_Infos[level].replacement_policy << endl;
+        cout << "\tWrite Policy: " << Cache_Infos[level].write_policy << endl;
+        cout << "\tWrite Allocate: " << Cache_Infos[level].write_allocate << endl;
+    }
     cout << "Trace Path: " << trace_file_path << endl;
     cout << "Verbose Mode: " << verbose << endl;
-    cout << "Number of page offset bits: " << page_offset_bits << endl;
-    cout << "Number of line offset bits: " << line_offset_bits << endl;
-    cout << "Number of index bits: " << index_bits << endl;
     cout << "=====================================================================" << endl;
 
     ifstream trace_file(trace_file_path);
@@ -116,7 +181,7 @@ int main(int argc, char** argv)
 
     vector<vector<string>> trace = read_trace_file(trace_file_path);
 
-    memory_subsystem* mem_subsys = new memory_subsystem(memory_size, page_size, cache_size, line_size, assoc, replacement_policy, write_policy, write_allocate, verbose);
+    memory_subsystem* mem_subsys = new memory_subsystem(num_memory_levels, Memory_Infos, num_cache_levels, Cache_Infos, verbose);
     
     for (size_t lines = 0; lines < trace.size(); lines++)
     {
