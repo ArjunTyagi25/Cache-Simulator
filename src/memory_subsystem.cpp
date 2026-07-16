@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <optional>
+#include <tuple>
 
 #include "../include/memory_subsystem.hpp"
 

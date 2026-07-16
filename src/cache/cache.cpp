@@ -2,6 +2,8 @@
 #include <optional>
 #include <random>
 #include <stdexcept>
+#include <tuple>
+
 #include "../../include/cache/cache.hpp"
 
 using namespace std;
