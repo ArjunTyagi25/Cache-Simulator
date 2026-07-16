@@ -24,9 +24,9 @@ After compiling the simulator, there are two ways to run it:
 To run the simulator directly, use:
 ```
 ./Cache-Simulator \ 
-    --num_memory_level <number of memory levels> \
+    --num_memory_levels <number of memory levels> \
     --memory_level <name, memory size, page size, line size> \
-    --num_cache_level <number of cache levels> \
+    --num_cache_levels <number of cache levels> \
     --cache_level <name, cache size, line size, associativity, replacement policy, write policy, write allocate> \
     --trace_file <path to trace file> \
     --verbose <true/false>
@@ -35,12 +35,12 @@ To run the simulator directly, use:
 For example, assuming one level of memory along with two levels of cache hierarchy,
 ```
 ./Cache-Simulator \
-    --num_memory_level 1
-    --memory_level MAIN,128,32,4
-    --num_cache_level 2
-    --cache_level L1,8,4,1,first_line,write_through,false
-    --cache_level L2,32,4,2,random,write_back,true
-    --trace ../test/sample_trace.txt
+    --num_memory_levels 1 \
+    --memory_level MAIN,128,32,4 \
+    --num_cache_levels 2 \
+    --cache_level L1,8,4,1,first_line,write_through,false \
+    --cache_level L2,32,4,2,random,write_back,true \
+    --trace_file ../test/sample_trace.txt \
     --verbose true
 ```
 
