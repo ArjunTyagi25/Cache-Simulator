@@ -24,16 +24,24 @@ After compiling the simulator, there are two ways to run it:
 To run the simulator directly, use:
 ```
 ./Cache-Simulator \ 
-    --memory_size <memory size in B> \ 
-    --page_size <page size in B> \ 
-    --cache_size <cache size in B> \ 
-    --line_size <line size in B> \ 
-    --assoc <associativity> \
-    --replacement_policy <specify the replacement policy for the cache> \
-    --write_policy <write_back/write_through> \
-    --write_allocate<true/false> \
+    --num_memory_level <number of memory levels> \
+    --memory_level <name, memory size, page size, line size> \
+    --num_cache_level <number of cache levels> \
+    --cache_level <name, cache size, line size, associativity, replacement policy, write policy, write allocate> \
     --trace_file <path to trace file> \
     --verbose <true/false>
+```
+
+For example, assuming one level of memory along with two levels of cache hierarchy,
+```
+./Cache-Simulator \
+    --num_memory_level 1
+    --memory_level MAIN,128,32,4
+    --num_cache_level 2
+    --cache_level L1,8,4,1,first_line,write_through,false
+    --cache_level L2,32,4,2,random,write_back,true
+    --trace ../test/sample_trace.txt
+    --verbose true
 ```
 
 Currently supported replacement policies are:
@@ -64,7 +72,7 @@ The YAML config file specifies the simulator parameters, including memory size, 
 - [x] Different write policies
 - [ ] LRU, pseudo-LRU and FIFO replacement policy
 - [ ] Add cache and memory latency models
-- [ ] Multi-level caches
+- [x] Multi-level caches
 - [ ] Update trace to support multi-byte read/write operations
 - [ ] Distinguishing between virtual and physical address
 - [ ] Translating virtual address to physical address
