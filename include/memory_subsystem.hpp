@@ -82,9 +82,20 @@ class memory_subsystem
         * @brief Fill a cache line into the specified cache level
         * @param line_data_ Data bytes of the cache line to be installed.
         * @param address_ Address belonging to the cache line being installed.
+        * @param dirty_bit_ Dirty bit of the cache line to be installed
         * @param cache_level_ Cache level where the line should be installed.
         */
-        void fill_cache_line(std::vector<u_int8_t> line_data_, size_t address_, size_t cache_level_);
+        void fill_cache_line(std::vector<u_int8_t> line_data_, size_t address_, bool dirty_bit_, size_t cache_level_);
+
+        /*
+        * @brief Insert/updates all levels of cache hierarchy upon a write hit/miss
+        * @param source_line_data_ Data of the line that contains `address_`. This data should be before `write_data_` is written into the line
+        * @param cache_hit_level_ Cache level at which hit happened. If missed across all cache level, it will be equal to the number of levels in the cache hierarchy
+        * @param address_ Address of the location to which write should take place
+        * @param write_data_ Data to write at the given address
+        * @param hit_status_ true in case of write hit at any cache level, false in case of write miss acros all cache levels
+        */
+        bool write_fill_path(std::vector<u_int8_t> source_line_data_, size_t cache_hit_level_, size_t address_, u_int8_t write_data_, bool hit_status_);
 
         /*
         * @brief Invalidate matching copies of a cache line in upper cache levels.
