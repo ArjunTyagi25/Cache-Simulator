@@ -1,3 +1,6 @@
+# Get the directory where this script resides
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 config=$1
 
 trace_file=$(yq -r '.simulation.trace_file' "$config")
@@ -41,7 +44,7 @@ do
   cmd+=(--cache_level "$level_config")
 done
 
-cd ./build/
+cd "$SCRIPT_DIR/build/"
 
 echo "Running: ${cmd[@]}"
 
