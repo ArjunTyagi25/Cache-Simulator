@@ -15,30 +15,6 @@ memory_subsystem::memory_subsystem(size_t num_memory_levels_,
 {
     this->verbose = verbose_;
 
-    this->num_memory_levels = num_memory_levels_;
-    for (size_t level = 0; level < this->num_memory_levels; level++)
-    {
-        this->memory_names.push_back(memory_infos_[level].name);
-        this->memory_sizes.push_back(memory_infos_[level].memory_size);
-        this->page_sizes.push_back(memory_infos_[level].page_size);
-        this->memory_line_sizes.push_back(memory_infos_[level].line_size);
-
-        this->memory_line_offset_bits.push_back(log2(this->memory_line_sizes[level]));
-        this->memory_line_offset_masks.push_back((1u << this->memory_line_offset_bits[level]) - 1);
-
-        this->page_offset_bits.push_back(log2(this->page_sizes[level]));
-        this->page_offset_masks.push_back((1u << this->page_offset_bits[level]) - 1);
-
-        memory* m = new memory(this->memory_sizes[level], this->page_sizes[level], this->memory_line_sizes[level], "random");
-        this->memories.push_back(m);
-
-        if (this->verbose)
-        {
-            cout << "--------------------INITIAL CONTENT OF " << this->memory_names[level] << " MEMORY--------------------" << endl;
-            this->memories[level]->print_memory_data();
-        }
-    }
-    
     this->num_cache_levels = num_cache_levels_;
     for (size_t level = 0; level < this->num_cache_levels; level++)
     {
@@ -63,6 +39,30 @@ memory_subsystem::memory_subsystem(size_t num_memory_levels_,
         {
             cout << "--------------------INITIAL CONTENT OF " << this->cache_names[level] << " CACHE---------------------" << endl;
             this->caches[level]->print_cache_data();
+        }
+    }
+
+    this->num_memory_levels = num_memory_levels_;
+    for (size_t level = 0; level < this->num_memory_levels; level++)
+    {
+        this->memory_names.push_back(memory_infos_[level].name);
+        this->memory_sizes.push_back(memory_infos_[level].memory_size);
+        this->page_sizes.push_back(memory_infos_[level].page_size);
+        this->memory_line_sizes.push_back(memory_infos_[level].line_size);
+
+        this->memory_line_offset_bits.push_back(log2(this->memory_line_sizes[level]));
+        this->memory_line_offset_masks.push_back((1u << this->memory_line_offset_bits[level]) - 1);
+
+        this->page_offset_bits.push_back(log2(this->page_sizes[level]));
+        this->page_offset_masks.push_back((1u << this->page_offset_bits[level]) - 1);
+
+        memory* m = new memory(this->memory_sizes[level], this->page_sizes[level], this->memory_line_sizes[level], "random");
+        this->memories.push_back(m);
+
+        if (this->verbose)
+        {
+            cout << "--------------------INITIAL CONTENT OF " << this->memory_names[level] << " MEMORY--------------------" << endl;
+            this->memories[level]->print_memory_data();
         }
     }
 
@@ -121,15 +121,15 @@ u_int8_t memory_subsystem::read(size_t address_)
             cout << "Status: " << status << " at cache " << this->cache_names[current_cache_level] << ", level " << current_cache_level << endl; 
             cout << "Evicted: " << evicted << endl;
             cout << "Read Value: " << static_cast<size_t>(*read_byte) << endl; 
-            for (size_t level = 0; level < this->num_memory_levels; level++)
-            {
-                cout << "--------------------CONTENT OF " << this->memory_names[level] << " MEMORY--------------------" << endl;
-                this->memories[level]->print_memory_data();
-            }
             for (size_t level = 0; level < this->num_cache_levels; level++)
             {
                 cout << "--------------------CONTENT OF " << this->cache_names[level] << " CACHE---------------------" << endl;
                 this->caches[level]->print_cache_data();
+            }
+            for (size_t level = 0; level < this->num_memory_levels; level++)
+            {
+                cout << "--------------------CONTENT OF " << this->memory_names[level] << " MEMORY--------------------" << endl;
+                this->memories[level]->print_memory_data();
             }
             cout << "-----------------------------------------------------------" << endl;
         }
@@ -171,16 +171,16 @@ u_int8_t memory_subsystem::read(size_t address_)
             }
             cout << "Status: " << status << " at all cache levels." << endl; 
             cout << "Evicted: " << evicted << endl;
-            cout << "Read Value: " << static_cast<size_t>(*read_byte) << endl; 
-            for (size_t level = 0; level < this->num_memory_levels; level++)
-            {
-                cout << "--------------------CONTENT OF " << this->memory_names[level] << " MEMORY--------------------" << endl;
-                this->memories[level]->print_memory_data();
-            }
+            cout << "Read Value: " << static_cast<size_t>(*read_byte) << endl;
             for (size_t level = 0; level < this->num_cache_levels; level++)
             {
                 cout << "--------------------CONTENT OF " << this->cache_names[level] << " CACHE---------------------" << endl;
                 this->caches[level]->print_cache_data();
+            } 
+            for (size_t level = 0; level < this->num_memory_levels; level++)
+            {
+                cout << "--------------------CONTENT OF " << this->memory_names[level] << " MEMORY--------------------" << endl;
+                this->memories[level]->print_memory_data();
             }
             cout << "-----------------------------------------------------------" << endl;
         }
@@ -245,15 +245,15 @@ void memory_subsystem::write(size_t address_, u_int8_t data_)
             }
             cout << "Status: " << status << " at cache " << this->cache_names[current_cache_level] << ", level " << current_cache_level << endl; 
             cout << "Evicted: " << evicted << endl;
-            for (size_t level = 0; level < this->num_memory_levels; level++)
-            {
-                cout << "--------------------CONTENT OF " << this->memory_names[level] << " MEMORY--------------------" << endl;
-                this->memories[level]->print_memory_data();
-            }
             for (size_t level = 0; level < this->num_cache_levels; level++)
             {
                 cout << "--------------------CONTENT OF " << this->cache_names[level] << " CACHE---------------------" << endl;
                 this->caches[level]->print_cache_data();
+            }
+            for (size_t level = 0; level < this->num_memory_levels; level++)
+            {
+                cout << "--------------------CONTENT OF " << this->memory_names[level] << " MEMORY--------------------" << endl;
+                this->memories[level]->print_memory_data();
             }
             cout << "-----------------------------------------------------------" << endl;
         }
