@@ -50,6 +50,7 @@ first_line
 random
 LFU
 MFU
+LRU
 ```
 
 Currently supported write policies are:
