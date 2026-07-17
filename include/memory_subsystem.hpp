@@ -79,6 +79,14 @@ class memory_subsystem
         std::vector<size_t> page_offset_masks;
 
         /*
+        * @brief Insert the requested cache line in all levels of cache hierarchy upon a read hit/miss
+        * @param source_line_data_ Data of the line that contains `address_`
+        * @param cache_hit_level_ Cache level at which hit happened. If missed across all cache levels, it will be equal to the number of levels in the cache hierarchy
+        * @param address_ Address of the location that was read
+        */
+        void read_fill_path(std::vector<u_int8_t> source_line_data_, size_t cache_hit_level_, size_t address_);
+
+        /*
         * @brief Insert a cache line into the specified cache level
         * @param line_data_ Data bytes of the cache line to be installed.
         * @param address_ Address belonging to the cache line being installed.

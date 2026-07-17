@@ -87,20 +87,14 @@ u_int8_t memory_subsystem::read(size_t address_)
             break;
     }
 
-    // If current_cache_level != num_cache_level, that means the address was found in one of the caches
-    if (current_cache_level != this->num_cache_levels)
-    {
-        optional<cache_line*> source_line = this->caches[current_cache_level]->get_cache_line(address_);
-        // Starting from highest level (0) going downwards, we need to put the line containing address_ in all higher-level caches
-        for (size_t level = 0; level < current_cache_level; level++)
-        {
-            this->fill_cache_line(source_line.value()->get_line_data(), address_, false, level);
-        }
-    }
-
     if (read_byte.has_value())
     {
         status = "Hit";
+
+        // Fetch line from the level at which cache hit happened
+        optional<cache_line*> source_line = this->caches[current_cache_level]->get_cache_line(address_);
+
+        this->read_fill_path(source_line.value()->get_line_data(), current_cache_level, address_);
 
         if (verbose)
         {
@@ -142,17 +136,11 @@ u_int8_t memory_subsystem::read(size_t address_)
 
         // Fetch the line from the memory
         memory_line* source_line = this->memories[current_memory_level]->get_line(address_);
-        vector<u_int8_t> source_line_data = source_line->get_line_data();
-
         size_t offset = address_ & this->memory_line_offset_masks[current_memory_level];
-        read_byte = source_line_data[offset];
-        
-        // Start from level 0 till num_cache_level inserting the cache line containing address_
-        for (size_t level = 0; level < current_cache_level; level++)
-        {
-            this->fill_cache_line(source_line_data, address_, false, level);
-        }
+        read_byte = source_line->get_line_data()[offset];
 
+        this->read_fill_path(source_line->get_line_data(), current_cache_level, address_);
+        
         if (verbose)
         {
             cout << "Operation: READ " << address_ << endl;
@@ -308,7 +296,16 @@ void memory_subsystem::write(size_t address_, u_int8_t data_)
     }
 }
 
-void memory_subsystem::fill_cache_line(vector<u_int8_t> line_data_, size_t address_, bool dirty_bit_, size_t cache_level_)
+void memory_subsystem::read_fill_path(vector<u_int8_t> source_line_data_, size_t cache_hit_level_, size_t address_)
+{
+    // Starting from highest level (0) going downwards, we need to insert the line containing address_ in each level till we reach the cache_hit_level
+    for (size_t level = 0; level < cache_hit_level_; level++)
+    {
+        this->insert_line_at_cache_level(source_line_data_, address_, false, level);
+    }
+}
+
+void memory_subsystem::insert_line_at_cache_level(vector<u_int8_t> line_data_, size_t address_, bool dirty_bit_, size_t cache_level_)
 {
     optional<tuple<vector<u_int8_t>, size_t, bool>> evicted_line_info = this->caches[cache_level_]->insert_line(line_data_, address_, dirty_bit_); 
     
