@@ -293,15 +293,15 @@ void memory_subsystem::write(size_t address_, u_int8_t data_)
             }
             cout << "Status: " << status << " at all cache levels." << endl; 
             cout << "Evicted: " << evicted << endl;
-            for (size_t level = 0; level < this->num_memory_levels; level++)
-            {
-                cout << "--------------------CONTENT OF " << this->memory_names[level] << " MEMORY--------------------" << endl;
-                this->memories[level]->print_memory_data();
-            }
             for (size_t level = 0; level < this->num_cache_levels; level++)
             {
                 cout << "--------------------CONTENT OF " << this->cache_names[level] << " CACHE---------------------" << endl;
                 this->caches[level]->print_cache_data();
+            }
+            for (size_t level = 0; level < this->num_memory_levels; level++)
+            {
+                cout << "--------------------CONTENT OF " << this->memory_names[level] << " MEMORY--------------------" << endl;
+                this->memories[level]->print_memory_data();
             }
             cout << "-----------------------------------------------------------" << endl;
         }
