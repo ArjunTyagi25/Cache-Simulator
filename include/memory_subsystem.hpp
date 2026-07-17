@@ -79,13 +79,13 @@ class memory_subsystem
         std::vector<size_t> page_offset_masks;
 
         /*
-        * @brief Fill a cache line into the specified cache level
+        * @brief Insert a cache line into the specified cache level
         * @param line_data_ Data bytes of the cache line to be installed.
         * @param address_ Address belonging to the cache line being installed.
         * @param dirty_bit_ Dirty bit of the cache line to be installed
         * @param cache_level_ Cache level where the line should be installed.
         */
-        void fill_cache_line(std::vector<u_int8_t> line_data_, size_t address_, bool dirty_bit_, size_t cache_level_);
+        void insert_line_at_cache_level(std::vector<u_int8_t> line_data_, size_t address_, bool dirty_bit_, size_t cache_level_);
 
         /*
         * @brief Insert/updates all levels of cache hierarchy upon a write hit/miss

@@ -315,36 +315,19 @@ void memory_subsystem::fill_cache_line(vector<u_int8_t> line_data_, size_t addre
     // A valid line was evicted from level cache_level_
     if (evicted_line_info.has_value())
     {
-        // If cache_level_ is 0, we may need to write the evicted line to the next lower-level cache
-        if (cache_level_ == 0)
+        // If cache_level_ is not 0, we need to invalidate all copies of the evicted line in all levels higher than cache_level_
+        if (cache_level_ != 0)
         {
-            // Dirty bit is 1 so need to write the evicted line to level 1 cache
-            if (get<2>(evicted_line_info.value()))
-            {
-                // Update the evicted line in lower level cache, if it exists
-                if (cache_level_+1 != this->num_cache_levels)
-                    this->caches[cache_level_+1]->update(get<0>(evicted_line_info.value()), get<1>(evicted_line_info.value()), get<2>(evicted_line_info.value()));
-                else
-                    this->memories[0]->write_line(get<0>(evicted_line_info.value()), get<1>(evicted_line_info.value()));
-            }
-            // Dirty bit is 0 so no need to update lower-level cache
-        }
-        // If cache_level_ is not 0
-        else
-        {
-            // Invalidating evicted line in upper-level caches
             this->invalidate_upper_level_copies(get<1>(evicted_line_info.value()), cache_level_);
-
-            // Dirty bit is 1 so need to write the evicted line to next lower-level cache
-            if (get<2>(evicted_line_info.value()))
-            {
-                // Update the evicted line in lower-level cache, if it exist
-                if (cache_level_+1 != this->num_cache_levels)
-                    this->caches[cache_level_+1]->update(get<0>(evicted_line_info.value()), get<1>(evicted_line_info.value()), get<2>(evicted_line_info.value()));
-                else
-                    this->memories[0]->write_line(get<0>(evicted_line_info.value()), get<1>(evicted_line_info.value()));
-            }
-            // Dirty bit is 0 so no need to update lower-level cache
+        }
+        // Dirty bit is 1 so need to write the evicted line to level 1 cache
+        if (get<2>(evicted_line_info.value()))
+        {
+            // Update the evicted line in lower level cache, if it exists
+            if (cache_level_+1 != this->num_cache_levels)
+                this->caches[cache_level_+1]->update_evicted_line(get<0>(evicted_line_info.value()), get<1>(evicted_line_info.value()), get<2>(evicted_line_info.value()));
+            else
+                this->memories[0]->write_line(get<0>(evicted_line_info.value()), get<1>(evicted_line_info.value()));
         }
     }
 }
@@ -387,7 +370,7 @@ bool memory_subsystem::write_fill_path(vector<u_int8_t> source_line_data_, size_
                         // Since current level's policy is write back, we write the dirty cache line but with dirty bit as 1
                         if (current_level_write_policy == "write_back")
                         {
-                            this->fill_cache_line(dirty_line_data, address_, true, level);
+                            this->insert_line_at_cache_level(dirty_line_data, address_, true, level);
                             upper_level_dirty_bit = true;
                             propagate_dirty_line_to_lower_level = false;
                             update_memory = false;
@@ -395,7 +378,7 @@ bool memory_subsystem::write_fill_path(vector<u_int8_t> source_line_data_, size_
                         // Since current level's policy is write through, we write the dirty cache line but with dirty bit as 0
                         else if (current_level_write_policy == "write_through")
                         {
-                            this->fill_cache_line(dirty_line_data, address_, false, level);
+                            this->insert_line_at_cache_level(dirty_line_data, address_, false, level);
                             upper_level_dirty_bit = false;
                         }
                     }
@@ -411,14 +394,14 @@ bool memory_subsystem::write_fill_path(vector<u_int8_t> source_line_data_, size_
                         // if ((previous_level_write_policy == "write_back") || (previous_level_write_policy == "write_through" && upper_level_line_data == source_line_data_))
                         if ((previous_level_write_policy == "write_back") || (previous_level_write_policy == "write_through" && !propagate_dirty_line_to_lower_level))
                         {
-                            this->fill_cache_line(source_line_data_, address_, false, level);
+                            this->insert_line_at_cache_level(source_line_data_, address_, false, level);
                             upper_level_line_data = source_line_data_;
                             upper_level_dirty_bit = false;
                         }
                         // Since previous level's policy is write through and current level's policy is write back, this level will have the dirty line with dirty bit as 1
                         else if (previous_level_write_policy == "write_through" && current_level_write_policy == "write_back")
                         {
-                            this->fill_cache_line(dirty_line_data, address_, true, level);
+                            this->insert_line_at_cache_level(dirty_line_data, address_, true, level);
                             upper_level_line_data = dirty_line_data;
                             upper_level_dirty_bit = true;
                             propagate_dirty_line_to_lower_level = false;
@@ -427,7 +410,7 @@ bool memory_subsystem::write_fill_path(vector<u_int8_t> source_line_data_, size_
                         // Since previous level's policy is write through and current level's policy is write through too, this level will have the dirty line with dirty bit as 0
                         else if (previous_level_write_policy == "write_through" && current_level_write_policy == "write_through")
                         {
-                            this->fill_cache_line(dirty_line_data, address_, false, level);
+                            this->insert_line_at_cache_level(dirty_line_data, address_, false, level);
                             upper_level_line_data = dirty_line_data;
                             upper_level_dirty_bit = false;
                         }
@@ -443,7 +426,7 @@ bool memory_subsystem::write_fill_path(vector<u_int8_t> source_line_data_, size_
                         // Since policy is write back, we write the dirty cache line but with dirty bit as 1
                         if (current_level_write_policy == "write_back")
                         {
-                            this->fill_cache_line(dirty_line_data, address_, true, level);
+                            this->insert_line_at_cache_level(dirty_line_data, address_, true, level);
                             upper_level_dirty_bit = true;
                             propagate_dirty_line_to_lower_level = false;
                             update_memory = false;
@@ -451,7 +434,7 @@ bool memory_subsystem::write_fill_path(vector<u_int8_t> source_line_data_, size_
                         // Since policy is write through, we write the dirty cache line but with dirty bit as 0
                         else if (current_level_write_policy == "write_through")
                         {
-                            this->fill_cache_line(dirty_line_data, address_, false, level);
+                            this->insert_line_at_cache_level(dirty_line_data, address_, false, level);
                             upper_level_dirty_bit = false;
                         }
                     }
@@ -535,7 +518,7 @@ bool memory_subsystem::write_fill_path(vector<u_int8_t> source_line_data_, size_
                     if (current_level_write_policy == "write_back")
                     {
                         // Since policy is write back, we write the dirty cache line but with dirty bit as 1
-                        this->fill_cache_line(dirty_line_data, address_, true, level);
+                        this->insert_line_at_cache_level(dirty_line_data, address_, true, level);
                         upper_level_dirty_bit = true;
                         propagate_dirty_line_to_lower_level = false;
                         update_memory = false;
@@ -543,7 +526,7 @@ bool memory_subsystem::write_fill_path(vector<u_int8_t> source_line_data_, size_
                     else if (current_level_write_policy == "write_through")
                     {
                         // Since policy is write through, we write the dirty cache line but with dirty bit as 0
-                        this->fill_cache_line(dirty_line_data, address_, false, level);
+                        this->insert_line_at_cache_level(dirty_line_data, address_, false, level);
                         upper_level_dirty_bit = false;
                     }
                 }
@@ -556,14 +539,14 @@ bool memory_subsystem::write_fill_path(vector<u_int8_t> source_line_data_, size_
                     // if ((previous_level_write_policy == "write_back") || (previous_level_write_policy == "write_through" && upper_level_line_data == source_line_data_))
                     if ((previous_level_write_policy == "write_back") || (previous_level_write_policy == "write_through" && !propagate_dirty_line_to_lower_level))
                     {
-                        this->fill_cache_line(source_line_data_, address_, false, level);
+                        this->insert_line_at_cache_level(source_line_data_, address_, false, level);
                         upper_level_line_data = source_line_data_;
                         upper_level_dirty_bit = false;
                     }
                     else if (previous_level_write_policy == "write_through" && current_level_write_policy == "write_back")
                     {
                         // dirty_line_data[address_ & this->cache_line_offset_masks[level]] = write_data_;
-                        this->fill_cache_line(dirty_line_data, address_, true, level);
+                        this->insert_line_at_cache_level(dirty_line_data, address_, true, level);
                         upper_level_line_data = dirty_line_data;
                         upper_level_dirty_bit = true;
                         propagate_dirty_line_to_lower_level = false;
@@ -573,7 +556,7 @@ bool memory_subsystem::write_fill_path(vector<u_int8_t> source_line_data_, size_
                     else if (previous_level_write_policy == "write_through" && current_level_write_policy == "write_through")
                     {
                         // dirty_line_data[address_ & this->cache_line_offset_masks[level]] = write_data_;
-                        this->fill_cache_line(upper_level_line_data, address_, false, level);
+                        this->insert_line_at_cache_level(upper_level_line_data, address_, false, level);
                         upper_level_line_data = dirty_line_data;
                         upper_level_dirty_bit = false;
                     }
@@ -589,7 +572,7 @@ bool memory_subsystem::write_fill_path(vector<u_int8_t> source_line_data_, size_
                     if (current_level_write_policy == "write_back")
                     {
                         // Since policy is write back, we write the dirty cache line but with dirty bit as 1
-                        this->fill_cache_line(dirty_line_data, address_, true, level);
+                        this->insert_line_at_cache_level(dirty_line_data, address_, true, level);
                         upper_level_dirty_bit = true;
                         propagate_dirty_line_to_lower_level = false;
                         update_memory = false;
@@ -597,7 +580,7 @@ bool memory_subsystem::write_fill_path(vector<u_int8_t> source_line_data_, size_
                     else if (current_level_write_policy == "write_through")
                     {
                         // Since policy is write through, we write the dirty cache line but with dirty bit as 0
-                        this->fill_cache_line(dirty_line_data, address_, false, level);
+                        this->insert_line_at_cache_level(dirty_line_data, address_, false, level);
                         upper_level_dirty_bit = false;
                     }
                 }
