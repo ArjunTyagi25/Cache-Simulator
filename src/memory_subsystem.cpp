@@ -592,13 +592,19 @@ bool memory_subsystem::write_fill_path(vector<u_int8_t> source_line_data_, size_
 
 void memory_subsystem::invalidate_upper_level_copies(size_t address_, size_t level_)
 {
+    // Iterate through all cache levels from 0 to level_ from which the line was evicted
     for (size_t level = 0; level < level_; level++)
     {
         optional<cache_line*> upper_level_line = this->caches[level]->get_cache_line(address_);
         if (upper_level_line.has_value())
         {
             if (upper_level_line.value()->get_dirty_bit())
-                this->caches[level_+1]->update(upper_level_line.value()->get_line_data(), address_, true);
+            {
+                if (level_+1 != this->num_cache_levels)
+                    this->caches[level_+1]->update_evicted_line(upper_level_line.value()->get_line_data(), address_, true);
+                else
+                    this->memories[0]->write_line(upper_level_line.value()->get_line_data(), address_);
+            }
             upper_level_line.value()->set_valid(false);
         }
     }
