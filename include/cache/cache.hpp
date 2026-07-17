@@ -51,7 +51,15 @@ class cache
         bool find_byte(size_t address_);
  
         /*
-        * @brief Update a cache line (assuming it is already present in the cache)
+        * @brief Write a cache line (assuming it is already present in the cache)
+        * @param line_data_ Data of the line that is to be written
+        * @param address_ Address of the line; used to extract index and tag
+        * @param dirty_bit_ Dirty bit of the line that is to be written
+        */
+        void write(std::vector<u_int8_t> line_data_, size_t address_, bool dirty_bit_);
+
+        /*
+        * @brief Update a cache line that was evicted from a higher level cache. It does not update the `access_order` variable used by replacement policies like LRU, MRU, etc.
         * @param line_data_ Data of the line that is to be updated
         * @param address_ Address of the line; used to extract index and tag
         * @param dirty_bit_ Dirty bit of the line that is to be updated

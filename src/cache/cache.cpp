@@ -92,7 +92,21 @@ bool cache::find_byte(size_t address_)
     return false;
 }
 
-void cache::update(vector<u_int8_t> line_data_, size_t address_, bool dirty_bit_)
+void cache::write(vector<u_int8_t> line_data_, size_t address_, bool dirty_bit_)
+{
+    size_t index = (address_ >> this->offset_bits) & this->index_mask;
+    size_t tag = (address_ >> (this->offset_bits + this->index_bits));
+    for (size_t i = index*this->assoc; i < (index+1) * this->assoc; i++)
+    {
+        if (this->cache_lines[i]->get_tag() == tag && this->cache_lines[i]->get_valid())
+        {
+            this->cache_lines[i]->write_line(line_data_, tag, dirty_bit_);
+            this->update_access_order(index, i);
+        }
+    }
+}
+
+void cache::update_evicted_line(vector<u_int8_t> line_data_, size_t address_, bool dirty_bit_)
 {
     size_t index = (address_ >> this->offset_bits) & this->index_mask;
     size_t tag = (address_ >> (this->offset_bits + this->index_bits));
