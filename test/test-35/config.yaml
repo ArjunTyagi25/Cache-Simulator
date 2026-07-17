@@ -1,0 +1,22 @@
+simulation:
+  name: test35_lru_metadata_reset
+  description: Newly inserted line should receive fresh LRU metadata after an eviction.
+  verbose: true
+  trace_file: ../test/test-35/trace.txt
+
+memory_hierarchy:
+  levels:
+    - name: MAIN
+      memory_size: 128
+      page_size: 32
+      line_size: 4
+
+cache_hierarchy:
+  levels:
+    - name: L1
+      cache_size: 16
+      line_size: 4
+      assoc: 2
+      replacement_policy: LRU
+      write_policy: write_back
+      write_allocate: true

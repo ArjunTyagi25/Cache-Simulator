@@ -1,0 +1,30 @@
+simulation:
+  name: test39_l2_fill_mru
+  description: A line fetched from L2 should become the MRU entry in L1.
+  verbose: true
+  trace_file: ../test/test-39/trace.txt
+
+memory_hierarchy:
+  levels:
+    - name: MAIN
+      memory_size: 128
+      page_size: 32
+      line_size: 4
+
+cache_hierarchy:
+  levels:
+    - name: L1
+      cache_size: 8
+      line_size: 4
+      assoc: 2
+      replacement_policy: LRU
+      write_policy: write_back
+      write_allocate: true
+
+    - name: L2
+      cache_size: 16
+      line_size: 4
+      assoc: 2
+      replacement_policy: LRU
+      write_policy: write_back
+      write_allocate: true
