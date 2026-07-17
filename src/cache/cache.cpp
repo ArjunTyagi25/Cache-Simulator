@@ -3,6 +3,8 @@
 #include <random>
 #include <stdexcept>
 #include <tuple>
+#include <deque>
+#include <algorithm>
 
 #include "../../include/cache/cache.hpp"
 
@@ -32,6 +34,11 @@ cache::cache(size_t cache_size_, size_t line_size_, size_t assoc_, string replac
         cache_line* l = new cache_line(this->line_size, false, "zeros");
         this->cache_lines.push_back(l);
         this->access_counts.push_back(0);
+    }
+
+    for (size_t i = 0; i < this->number_of_sets; i++)
+    {
+        this->access_order.push_back(deque<size_t>());
     }
 
     this->total_accesses = 0;
@@ -67,6 +74,8 @@ std::optional<u_int8_t> cache::read_byte(size_t address_)
             this->access_counts[i] += 1;
             this->read_hits += 1;
             this->total_hits += 1;
+
+            this->update_access_history(index, i);
             return byte;
         }
     }
@@ -101,7 +110,7 @@ void cache::write(vector<u_int8_t> line_data_, size_t address_, bool dirty_bit_)
         if (this->cache_lines[i]->get_tag() == tag && this->cache_lines[i]->get_valid())
         {
             this->cache_lines[i]->write_line(line_data_, tag, dirty_bit_);
-            this->update_access_order(index, i);
+            this->update_access_history(index, i);
         }
     }
 }
@@ -130,6 +139,7 @@ optional<tuple<vector<u_int8_t>, size_t, bool>> cache::insert_line(vector<u_int8
         {
             this->cache_lines[i]->write_line(line_data_, tag, dirty_bit_);
             this->access_counts[i] = 0;
+            this->update_access_history(index, i);
             return nullopt;
         }
     }
@@ -142,6 +152,7 @@ optional<tuple<vector<u_int8_t>, size_t, bool>> cache::insert_line(vector<u_int8
 
     this->cache_lines[line_number_to_replace]->write_line(line_data_, tag, dirty_bit_);
     this->access_counts[line_number_to_replace] = 0;
+    this->update_access_history(index, line_number_to_replace);
 
 
     // Return the evicted line if the dirty bit is 1, otherwise return nullptr
@@ -158,24 +169,24 @@ optional<tuple<vector<u_int8_t>, size_t, bool>> cache::insert_line(vector<u_int8
     return make_tuple(evicted_line_data, evicted_line_address, evicted_line_dirty_bit);
 }
 
-size_t cache::eviction_policy(size_t index)
+size_t cache::eviction_policy(size_t index_)
 {
     size_t line_number_to_evict;
     if (this->replacement_policy == "first_line")
     {
-        line_number_to_evict = index * this->assoc;
+        line_number_to_evict = index_ * this->assoc;
         return line_number_to_evict;
     }
     else if (this->replacement_policy == "random")
     {
-        uniform_int_distribution<size_t> dist(index*this->assoc, (index+1)*this->assoc - 1);
+        uniform_int_distribution<size_t> dist(index_*this->assoc, (index_+1)*this->assoc - 1);
         line_number_to_evict = dist(this->gen);
         return line_number_to_evict;
     }
     else if (this->replacement_policy == "LFU")
     {
         int min_count = numeric_limits<int>::max();
-        for (size_t i = index*this->assoc; i < (index+1)*this->assoc; i++)
+        for (size_t i = index_*this->assoc; i < (index_+1)*this->assoc; i++)
         {
             if (this->access_counts[i] <= min_count)
             {
@@ -187,8 +198,8 @@ size_t cache::eviction_policy(size_t index)
     }
     else if (this->replacement_policy == "MFU")
     {
-       int max_count = numeric_limits<int>::min();
-        for (size_t i = index*this->assoc; i < (index+1)*this->assoc; i++)
+        int max_count = numeric_limits<int>::min();
+        for (size_t i = index_*this->assoc; i < (index_+1)*this->assoc; i++)
         {
             if (this->access_counts[i] >= max_count)
             {
@@ -197,6 +208,18 @@ size_t cache::eviction_policy(size_t index)
             }
         }
         return line_number_to_evict; 
+    }
+    else if (this->replacement_policy == "LRU")
+    {
+        if (this->access_order[index_].size() != this->assoc)
+        {
+            cout << "Access order size is not equal to the associativity so no point in evicting a line. Please check the code." << endl;
+            return -1;
+        }
+        else
+        {
+            return this->access_order[index_].back();
+        }
     }
     else
         throw invalid_argument("Unknown replacement policy");
@@ -215,6 +238,43 @@ optional<cache_line*> cache::get_cache_line(size_t address_)
     }
 
     return nullopt;
+}
+
+void cache::update_access_history(size_t index_, size_t line_number_)
+{
+    // Deque is empty so just push the line_number_
+    if (this->access_order[index_].size() == 0)
+    {
+        this->access_order[index_].push_front(line_number_);
+    }
+    // Size of deque is not equal to the associativity so still some empty space in the set 
+    else if (this->access_order[index_].size() != this->assoc)
+    {
+        auto iter = find(this->access_order[index_].begin(), this->access_order[index_].end(), line_number_);
+        if (iter == this->access_order[index_].end())
+        {
+            this->access_order[index_].push_front(line_number_);
+        }
+        else
+        {
+            this->access_order[index_].erase(iter);
+            this->access_order[index_].push_front(line_number_);
+        }
+    }
+    else
+    {
+        auto iter = find(this->access_order[index_].begin(), this->access_order[index_].end(), line_number_);
+        if (iter == this->access_order[index_].end())
+        {
+            this->access_order[index_].pop_back();
+            this->access_order[index_].push_front(line_number_);
+        }
+        else
+        {
+            this->access_order[index_].erase(iter);
+            this->access_order[index_].push_front(line_number_);
+        }
+    }
 }
 
 vector<cache_line*> cache::get_cache_lines()

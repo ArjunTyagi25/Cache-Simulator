@@ -3,6 +3,8 @@
 #include <optional>
 #include <vector>
 #include <random>
+#include <deque>
+
 #include "cache_line.hpp"
 
 class cache
@@ -64,7 +66,7 @@ class cache
         * @param address_ Address of the line; used to extract index and tag
         * @param dirty_bit_ Dirty bit of the line that is to be updated
         */
-        void update(std::vector<u_int8_t> line_data_, size_t address_, bool dirty_bit_);
+        void update_evicted_line(std::vector<u_int8_t> line_data_, size_t address_, bool dirty_bit_);
 
         /*
         * @brief Place a line of data in the cache
@@ -74,13 +76,6 @@ class cache
         * @return Evicted line's data along with its address
         */
         std::optional<std::tuple<std::vector<u_int8_t>, size_t, bool>> insert_line(std::vector<u_int8_t> write_data_, size_t address_, bool dirty_bit_);
-
-        /*
-        * @brief Implement different eviction (a.k.a., replacement) policies
-        * @param index Index of the set from which a line is to be evicted
-        * @return Line number to be evicted from the cache, based on the eviction policy
-        */
-        size_t eviction_policy(size_t index);
 
         /*
         * @brief Get a cache line
@@ -132,4 +127,19 @@ class cache
         std::mt19937 gen;
         std::vector<cache_line*> cache_lines;
         std::vector<int> access_counts;
+        std::vector<std::deque<size_t>> access_order;
+
+        /*
+        * @brief Implement different eviction (a.k.a., replacement) policies
+        * @param index_ Index of the set from which a line is to be evicted
+        * @return Line number to be evicted from the cache, based on the eviction policy
+        */
+        size_t eviction_policy(size_t index_);
+
+        /*
+        * @brief Updates the history of all lines in a set 
+        * @param index_ Index of the set whose history is supposed to be updated
+        * @param line_number_ Line number that was accessed
+        */
+        void update_access_history(size_t index_, size_t line_number_);
 };
