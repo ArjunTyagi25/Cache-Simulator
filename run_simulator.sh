@@ -23,8 +23,10 @@ do
   memory_size=$(yq -r ".memory_hierarchy.levels[$i].memory_size" "$config")
   page_size=$(yq -r ".memory_hierarchy.levels[$i].page_size" "$config")
   line_size=$(yq -r ".memory_hierarchy.levels[$i].line_size" "$config")
+  read_latency=$(yq -r ".memory_hierarchy.levels[$i].read_latency" "$config")
+  write_latency=$(yq -r ".memory_hierarchy.levels[$i].write_latency" "$config")
 
-  level_config="${name},${memory_size},${page_size},${line_size}"
+  level_config="${name},${memory_size},${page_size},${line_size},${read_latency},${write_latency}"
 
   cmd+=(--memory_level "$level_config")
 done
@@ -38,8 +40,10 @@ do
   replacement_policy=$(yq -r ".cache_hierarchy.levels[$i].replacement_policy" "$config")
   write_policy=$(yq -r ".cache_hierarchy.levels[$i].write_policy" "$config")
   write_allocate=$(yq -r ".cache_hierarchy.levels[$i].write_allocate" "$config")
+  read_latency=$(yq -r ".cache_hierarchy.levels[$i].read_latency" "$config")
+  write_latency=$(yq -r ".cache_hierarchy.levels[$i].write_latency" "$config")
 
-  level_config="${name},${cache_size},${line_size},${assoc},${replacement_policy},${write_policy},${write_allocate}"
+  level_config="${name},${cache_size},${line_size},${assoc},${replacement_policy},${write_policy},${write_allocate},${read_latency},${write_latency}"
 
   cmd+=(--cache_level "$level_config")
 done
