@@ -60,6 +60,8 @@ LFU
 MFU
 LRU
 PLRU
+FIFO
+LIFO
 ```
 
 Currently supported write policies are:
