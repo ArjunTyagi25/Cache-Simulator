@@ -1,7 +1,7 @@
 simulation:
   name: test14_random_no_cross_set
   description: Random victim selection must stay within the target set.
-  verbose: false
+  verbose: true
   trace_file: ../test/test-14/trace.txt
 
 memory_hierarchy:

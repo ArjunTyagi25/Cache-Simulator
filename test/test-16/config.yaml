@@ -1,7 +1,7 @@
 simulation:
   name: test16_lfu_basic
   description: LFU should evict the least frequently used line.
-  verbose: false
+  verbose: true
   trace_file: ../test/test-16/trace.txt
 
 memory_hierarchy:

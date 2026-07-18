@@ -1,7 +1,7 @@
 simulation:
   name: test08_larger_line_size
   description: Tests 8-byte cache lines to catch hardcoded 4-byte line assumptions.
-  verbose: false
+  verbose: true
   trace_file: ../test/test-08/trace.txt
 
 memory_hierarchy:

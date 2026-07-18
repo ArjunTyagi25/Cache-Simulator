@@ -1,7 +1,7 @@
 simulation:
   name: test15_random_four_way_range
   description: Random replacement in a 4-way set should not evict from another set.
-  verbose: false
+  verbose: true
   trace_file: ../test/test-15/trace.txt
 
 memory_hierarchy:

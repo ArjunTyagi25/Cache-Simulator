@@ -1,7 +1,7 @@
 simulation:
   name: test07_page_boundary_eviction
   description: Page-boundary accesses that map to the same set should evict correctly.
-  verbose: false
+  verbose: true
   trace_file: ../test/test-07/trace.txt
 
 memory_hierarchy:

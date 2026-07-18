@@ -1,7 +1,7 @@
 simulation:
   name: test10_assoc_first_line
   description: Tests first_line replacement in a 2-way set.
-  verbose: false
+  verbose: true
   trace_file: ../test/test-10/trace.txt
 
 memory_hierarchy:

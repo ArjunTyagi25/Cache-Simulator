@@ -1,7 +1,7 @@
 simulation:
   name: test06_page_boundary_no_eviction
   description: Accesses across a page boundary should still map to the correct cache lines.
-  verbose: false
+  verbose: true
   trace_file: ../test/test-06/trace.txt
 
 memory_hierarchy:

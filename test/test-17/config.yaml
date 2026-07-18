@@ -1,7 +1,7 @@
 simulation:
   name: test17_lfu_metadata_reset
   description: A newly inserted line should not inherit stale LFU frequency metadata.
-  verbose: false
+  verbose: true
   trace_file: ../test/test-17/trace.txt
 
 memory_hierarchy:
