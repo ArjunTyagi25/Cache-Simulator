@@ -16,11 +16,18 @@ do
 		../run_simulator.sh $config > $test/output.txt
 		cd "$SCRIPT_DIR"
 
-		if grep -xFq "The test case with the given trace passed successfully!" "$test/output.txt"; then
+		expected_total_latency=$(yq -r ".expected.total_latency" "$config")
+		actual_total_latency=$(awk '/Total Latency/ {print $NF}' "$test/output.txt")
+
+		if [[ "$expected_total_latency" == "$actual_total_latency" ]]; then
 			echo "$test: PASSED"
+			echo "Expected: $expected_total_latency"
+			echo "Actual:   $actual_total_latency"
 		else
 			echo "$test: FAILED"
-		fi 
+			echo "Expected: $expected_total_latency"
+			echo "Actual:   $actual_total_latency"
+		fi
 	done
 
 	rm "$test/output.txt"
