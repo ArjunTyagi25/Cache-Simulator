@@ -36,4 +36,4 @@ cache_hierarchy:
       write_latency: 5
 
 expected:
-  total_latency: 122
+  total_latency: 119

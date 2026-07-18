@@ -1,5 +1,5 @@
 simulation:
-  name: test_33_l1_write_through_updates_l2
+  name: test_26_l1_write_through_updates_l2
   description: L1 write-through should immediately update the lower-level cache.
   verbose: true
   trace_file: ../test/test-26/trace.txt
@@ -10,6 +10,8 @@ memory_hierarchy:
       memory_size: 128
       page_size: 32
       line_size: 4
+      read_latency: 100
+      write_latency: 100
 
 cache_hierarchy:
   levels:
@@ -20,6 +22,8 @@ cache_hierarchy:
       replacement_policy: first_line
       write_policy: write_through
       write_allocate: true
+      read_latency: 1
+      write_latency: 1
 
     - name: L2
       cache_size: 8
@@ -28,3 +32,8 @@ cache_hierarchy:
       replacement_policy: first_line
       write_policy: write_back
       write_allocate: true
+      read_latency: 5
+      write_latency: 5
+
+expected:
+  total_latency: 237
