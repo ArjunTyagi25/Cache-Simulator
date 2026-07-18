@@ -1,0 +1,22 @@
+simulation:
+  name: test46_plru_tree_updates
+  description: Exercise every branch of the PLRU tree through cache hits.
+  verbose: true 
+  trace_file: ../test/test-46/trace.txt
+
+memory_hierarchy:
+  levels:
+    - name: MAIN
+      memory_size: 128
+      page_size: 32
+      line_size: 4
+
+cache_hierarchy:
+  levels:
+    - name: L1
+      cache_size: 16
+      line_size: 4
+      assoc: 4
+      replacement_policy: PLRU
+      write_policy: write_back
+      write_allocate: true
