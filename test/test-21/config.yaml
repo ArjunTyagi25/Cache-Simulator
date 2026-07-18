@@ -1,5 +1,5 @@
 simulation:
-  name: test_28_same_line_multiple_writes
+  name: test_21_same_line_multiple_writes
   description: Multiple writes to different byte offsets within the same cache line.
   verbose: true
   trace_file: ../test/test-21/trace.txt
@@ -10,6 +10,8 @@ memory_hierarchy:
       memory_size: 128
       page_size: 32
       line_size: 4
+      read_latency: 100
+      write_latency: 100
 
 cache_hierarchy:
   levels:
@@ -20,6 +22,8 @@ cache_hierarchy:
       replacement_policy: first_line
       write_policy: write_back
       write_allocate: true
+      read_latency: 1
+      write_latency: 1
 
     - name: L2
       cache_size: 32
@@ -28,3 +32,8 @@ cache_hierarchy:
       replacement_policy: first_line
       write_policy: write_back
       write_allocate: true
+      read_latency: 5
+      write_latency: 5
+
+expected:
+  total_latency: 122

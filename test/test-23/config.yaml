@@ -1,5 +1,5 @@
 simulation:
-  name: test_30_dirty_l2_eviction_to_l3
+  name: test_23_dirty_l2_eviction_to_l3
   description: Dirty L2 eviction should update the existing L3 copy.
   verbose: true
   trace_file: ../test/test-23/trace.txt
@@ -10,6 +10,8 @@ memory_hierarchy:
       memory_size: 128
       page_size: 32
       line_size: 4
+      read_latency: 100
+      write_latency: 100
 
 cache_hierarchy:
   levels:
@@ -20,6 +22,8 @@ cache_hierarchy:
       replacement_policy: first_line
       write_policy: write_back
       write_allocate: true
+      read_latency: 1
+      write_latency: 1
 
     - name: L2
       cache_size: 4
@@ -28,6 +32,8 @@ cache_hierarchy:
       replacement_policy: first_line
       write_policy: write_back
       write_allocate: true
+      read_latency: 5
+      write_latency: 5
 
     - name: L3
       cache_size: 8
@@ -36,3 +42,8 @@ cache_hierarchy:
       replacement_policy: first_line
       write_policy: write_back
       write_allocate: true
+      read_latency: 20
+      write_latency: 20
+
+expected:
+  total_latency: 418
