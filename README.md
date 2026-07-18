@@ -84,7 +84,7 @@ The YAML config file specifies the simulator parameters, including memory size, 
 - [x] Detailed statistics
 - [x] Verbose mode
 - [x] Different write policies
-- [ ] LRU, pseudo-LRU and FIFO replacement policy
+- [x] LRU, pseudo-LRU and FIFO replacement policy
 - [ ] Add cache and memory latency models
 - [x] Multi-level caches
 - [ ] Update trace to support multi-byte read/write operations
