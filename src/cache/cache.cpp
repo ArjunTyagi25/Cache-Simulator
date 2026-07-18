@@ -46,6 +46,11 @@ cache::cache(size_t cache_size_, size_t line_size_, size_t assoc_, string replac
         for (size_t i = 0; i < this->number_of_sets; i++)
             this->pseudo_access_order.push_back(vector<bool>(this->assoc-1, false));
     }
+    else if (this->replacement_policy == "FIFO" || this->replacement_policy == "LIFO")
+    {
+        for (size_t i = 0; i < this->number_of_sets; i++)
+            this->insert_order.push_back(deque<size_t>());
+    }
 
     this->total_accesses = 0;
     this->read_accesses = 0;
@@ -146,6 +151,7 @@ optional<tuple<vector<u_int8_t>, size_t, bool>> cache::insert_line(vector<u_int8
             this->cache_lines[i]->write_line(line_data_, tag, dirty_bit_);
             this->access_counts[i] = 0;
             this->update_access_history(index, i);
+            this->update_insert_history(index, i);
             return nullopt;
         }
     }
@@ -159,6 +165,7 @@ optional<tuple<vector<u_int8_t>, size_t, bool>> cache::insert_line(vector<u_int8
     this->cache_lines[line_number_to_replace]->write_line(line_data_, tag, dirty_bit_);
     this->access_counts[line_number_to_replace] = 0;
     this->update_access_history(index, line_number_to_replace);
+    this->update_insert_history(index, line_number_to_replace);
 
 
     // Return the evicted line if the dirty bit is 1, otherwise return nullptr
@@ -241,6 +248,30 @@ size_t cache::eviction_policy(size_t index_)
         size_t line_number = index_ * this->assoc + way;
         return line_number;
     }
+    else if (this->replacement_policy == "FIFO")
+    {
+        if (this->insert_order[index_].size() != this->assoc)
+        {
+            cout << "Insert order size is not equal to the associativity so no point in evicting a line. Please check the code." << endl;
+            return -1;
+        }
+        else
+        {
+            return this->insert_order[index_].back();
+        }
+    }
+    else if (this->replacement_policy == "LIFO")
+    {
+        if (this->insert_order[index_].size() != this->assoc)
+        {
+            cout << "Insert order size is not equal to the associativity so no point in evicting a line. Please check the code." << endl;
+            return -1;
+        }
+        else
+        {
+            return this->insert_order[index_].front();
+        }
+    }
     else
         throw invalid_argument("Unknown replacement policy");
 }
@@ -312,6 +343,36 @@ void cache::update_access_history(size_t index_, size_t line_number_)
             else if (child == 2*parent + 2)
                 this->pseudo_access_order[index_][parent] = false;
             child = parent;
+        }
+    }
+}
+
+void cache::update_insert_history(size_t index_, size_t line_number_)
+{
+    if (this->replacement_policy == "FIFO")
+    {
+        // Insert deque's size is less than the associativity so just push the line_number_
+        if (this->insert_order[index_].size() < this->assoc)
+        {
+            this->insert_order[index_].push_front(line_number_);
+        }
+        else
+        {
+            this->insert_order[index_].pop_back();
+            this->insert_order[index_].push_front(line_number_);
+        }
+    }
+    else if (this->replacement_policy == "LIFO")
+    {
+        // Insert deque's size is less than the associativity so just push the line_number_
+        if (this->insert_order[index_].size() < this->assoc)
+        {
+            this->insert_order[index_].push_front(line_number_);
+        }
+        else
+        {
+            this->insert_order[index_].pop_front();
+            this->insert_order[index_].push_front(line_number_);
         }
     }
 }

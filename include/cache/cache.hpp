@@ -129,6 +129,7 @@ class cache
         std::vector<int> access_counts;
         std::vector<std::deque<size_t>> access_order;
         std::vector<std::vector<bool>> pseudo_access_order;
+        std::vector<std::deque<size_t>> insert_order;
 
         /*
         * @brief Implement different eviction (a.k.a., replacement) policies
@@ -143,4 +144,11 @@ class cache
         * @param line_number_ Line number that was accessed
         */
         void update_access_history(size_t index_, size_t line_number_);
+
+        /*
+        * @brief Updates the insert history i.e., the order in which lines are inserted in a set
+        * @param index_ Index of the set whose insert history is supposed to be updated
+        * @param line_number_ Line number that was inserted
+        */
+        void update_insert_history(size_t index_, size_t line_number_);
 };
