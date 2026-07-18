@@ -128,6 +128,7 @@ class cache
         std::vector<cache_line*> cache_lines;
         std::vector<int> access_counts;
         std::vector<std::deque<size_t>> access_order;
+        std::vector<std::vector<bool>> pseudo_access_order;
 
         /*
         * @brief Implement different eviction (a.k.a., replacement) policies

@@ -36,9 +36,15 @@ cache::cache(size_t cache_size_, size_t line_size_, size_t assoc_, string replac
         this->access_counts.push_back(0);
     }
 
-    for (size_t i = 0; i < this->number_of_sets; i++)
+    if (this->replacement_policy == "LRU")
     {
-        this->access_order.push_back(deque<size_t>());
+        for (size_t i = 0; i < this->number_of_sets; i++)
+            this->access_order.push_back(deque<size_t>());
+    }
+    else if (this->replacement_policy == "PLRU")
+    {
+        for (size_t i = 0; i < this->number_of_sets; i++)
+            this->pseudo_access_order.push_back(vector<bool>(this->assoc-1, false));
     }
 
     this->total_accesses = 0;
@@ -221,6 +227,20 @@ size_t cache::eviction_policy(size_t index_)
             return this->access_order[index_].back();
         }
     }
+    else if (this->replacement_policy == "PLRU")
+    {
+        size_t node = 0;
+        for (size_t i = 0; i < log2(this->assoc); i++)
+        {
+            if (!this->pseudo_access_order[index_][node])
+                node = 2*node + 1;
+            else
+                node = 2*node + 2;
+        }
+        size_t way = node - (this->assoc - 1);
+        size_t line_number = index_ * this->assoc + way;
+        return line_number;
+    }
     else
         throw invalid_argument("Unknown replacement policy");
 }
@@ -242,37 +262,56 @@ optional<cache_line*> cache::get_cache_line(size_t address_)
 
 void cache::update_access_history(size_t index_, size_t line_number_)
 {
-    // Deque is empty so just push the line_number_
-    if (this->access_order[index_].size() == 0)
-    {
-        this->access_order[index_].push_front(line_number_);
-    }
-    // Size of deque is not equal to the associativity so still some empty space in the set 
-    else if (this->access_order[index_].size() != this->assoc)
-    {
-        auto iter = find(this->access_order[index_].begin(), this->access_order[index_].end(), line_number_);
-        if (iter == this->access_order[index_].end())
+    if (this->replacement_policy == "LRU")
+    {        
+        // Deque is empty so just push the line_number_
+        if (this->access_order[index_].size() == 0)
         {
             this->access_order[index_].push_front(line_number_);
+        }
+        // Size of deque is not equal to the associativity so still some empty space in the set 
+        else if (this->access_order[index_].size() != this->assoc)
+        {
+            auto iter = find(this->access_order[index_].begin(), this->access_order[index_].end(), line_number_);
+            if (iter == this->access_order[index_].end())
+            {
+                this->access_order[index_].push_front(line_number_);
+            }
+            else
+            {
+                this->access_order[index_].erase(iter);
+                this->access_order[index_].push_front(line_number_);
+            }
         }
         else
         {
-            this->access_order[index_].erase(iter);
-            this->access_order[index_].push_front(line_number_);
+            auto iter = find(this->access_order[index_].begin(), this->access_order[index_].end(), line_number_);
+            if (iter == this->access_order[index_].end())
+            {
+                this->access_order[index_].pop_back();
+                this->access_order[index_].push_front(line_number_);
+            }
+            else
+            {
+                this->access_order[index_].erase(iter);
+                this->access_order[index_].push_front(line_number_);
+            }
         }
     }
-    else
+    else if (this->replacement_policy == "PLRU")
     {
-        auto iter = find(this->access_order[index_].begin(), this->access_order[index_].end(), line_number_);
-        if (iter == this->access_order[index_].end())
+        size_t way = (line_number_ - index_ * this->assoc);
+        size_t child = way + (this->assoc - 1);
+        size_t parent; 
+
+        while (child > 0)
         {
-            this->access_order[index_].pop_back();
-            this->access_order[index_].push_front(line_number_);
-        }
-        else
-        {
-            this->access_order[index_].erase(iter);
-            this->access_order[index_].push_front(line_number_);
+            parent = (child - 1)/2;
+            if (child == 2*parent + 1)
+                this->pseudo_access_order[index_][parent] = true;
+            else if (child == 2*parent + 2)
+                this->pseudo_access_order[index_][parent] = false;
+            child = parent;
         }
     }
 }
