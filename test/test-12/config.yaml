@@ -1,7 +1,7 @@
 simulation:
   name: test12_no_allocate_no_eviction
   description: A write miss with write_allocate false should not evict an existing cached line.
-  verbose: false
+  verbose: true
   trace_file: ../test/test-12/trace.txt
 
 memory_hierarchy:
@@ -10,6 +10,8 @@ memory_hierarchy:
       memory_size: 128
       page_size: 32
       line_size: 4
+      read_latency: 100
+      write_latency: 100
 
 cache_hierarchy:
   levels:
@@ -20,6 +22,8 @@ cache_hierarchy:
       replacement_policy: first_line
       write_policy: write_through
       write_allocate: false
+      read_latency: 1
+      write_latency: 1
 
 expected:
   result: pass
@@ -33,3 +37,4 @@ expected:
   total_evictions: 1
   dirty_evictions: 0
   non_dirty_evictions: 1
+  total_latency: 407
