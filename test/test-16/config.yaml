@@ -10,6 +10,8 @@ memory_hierarchy:
       memory_size: 128
       page_size: 32
       line_size: 4
+      read_latency: 100
+      write_latency: 100
 
 cache_hierarchy:
   levels:
@@ -20,6 +22,8 @@ cache_hierarchy:
       replacement_policy: LFU
       write_policy: write_back
       write_allocate: true
+      read_latency: 1
+      write_latency: 1
 
 expected:
   result: pass
@@ -33,3 +37,4 @@ expected:
   total_evictions: 1
   dirty_evictions: 1
   non_dirty_evictions: 0
+  total_latency: 410
