@@ -1,4 +1,4 @@
-# !/usr/bin/env bash
+#!/usr/bin/env bash
 # This bash script runs all the test cases present inside tests/ directory.
 
 # Get the directory where this script resides
