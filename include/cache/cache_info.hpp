@@ -12,4 +12,6 @@ struct CacheInfo
     std::string replacement_policy;
     std::string write_policy;
     bool write_allocate;
+    std::size_t read_latency;
+    std::size_t write_latency;
 };

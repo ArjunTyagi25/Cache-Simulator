@@ -9,4 +9,6 @@ struct MemoryInfo
     std::size_t memory_size;
     std::size_t page_size;
     std::size_t line_size;
+    std::size_t read_latency;
+    std::size_t write_latency;
 };
