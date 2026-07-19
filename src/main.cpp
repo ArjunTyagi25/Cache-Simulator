@@ -51,10 +51,10 @@ vector<MemoryInfo>extract_memory_level_info(vector<string> memory_info_string_)
         while (std::getline(ss, token, ',')) 
             result.push_back(token);
 
-        if (result.size() != 4)
+        if (result.size() != 6)
         {
             throw invalid_argument(
-                "Invalid memory level config. Expected 4 arguments: " + memory_level
+                "Invalid memory level config. Expected 6 arguments: " + memory_level
             );
         }
 
@@ -63,7 +63,8 @@ vector<MemoryInfo>extract_memory_level_info(vector<string> memory_info_string_)
         memory_info.memory_size = stoul(result[1]);
         memory_info.page_size = stoul(result[2]);
         memory_info.line_size = stoul(result[3]);
-        
+        memory_info.read_latency = stoul(result[4]);
+        memory_info.write_latency = stoul(result[5]);
         
         Memory_Infos.push_back(memory_info);
     }
@@ -83,10 +84,10 @@ vector<CacheInfo> extract_cache_level_info(vector<string> cache_info_string_)
         while (std::getline(ss, token, ',')) 
             result.push_back(token);
 
-        if (result.size() != 7)
+        if (result.size() != 9)
         {
             throw invalid_argument(
-                "Invalid cache level config. Expected 7 arguments: " + cache_level
+                "Invalid cache level config. Expected 9 arguments: " + cache_level
             );
         }
 
@@ -98,6 +99,8 @@ vector<CacheInfo> extract_cache_level_info(vector<string> cache_info_string_)
         cache_info.replacement_policy = result[4];
         cache_info.write_policy = result[5];
         cache_info.write_allocate = (result[6] == "true");
+        cache_info.read_latency = stoul(result[7]);
+        cache_info.write_latency = stoul(result[8]);
         
         Cache_Infos.push_back(cache_info);
     }
@@ -117,7 +120,7 @@ int main(int argc, char** argv)
     vector<string> memory_info_string;
     size_t num_cache_levels = 2;
     vector<string> cache_info_string;
-    string trace_file_path = "../test/trace.txt";
+    string trace_file_path = "../test/sample_trace.txt";
     bool verbose = false;
 
     for (int i = 1; i < argc; i += 2)
@@ -154,6 +157,8 @@ int main(int argc, char** argv)
         cout << "\tMemory Size (B): " << Memory_Infos[level].memory_size << endl;
         cout << "\tPage Size (B): " << Memory_Infos[level].page_size << endl;
         cout << "\tLine Size (B): " << Memory_Infos[level].line_size << endl;
+        cout << "\tRead Latency (in cycles): " << Memory_Infos[level].read_latency << endl;
+        cout << "\tWrite Latency (in cycles): " << Memory_Infos[level].write_latency << endl;
     }
     cout << "Number of Levels of Cache: " << num_cache_levels << endl;
     for (size_t level = 0; level < num_cache_levels; level++)
@@ -165,6 +170,8 @@ int main(int argc, char** argv)
         cout << "\tReplacement Policy: " << Cache_Infos[level].replacement_policy << endl;
         cout << "\tWrite Policy: " << Cache_Infos[level].write_policy << endl;
         cout << "\tWrite Allocate: " << Cache_Infos[level].write_allocate << endl;
+        cout << "\tRead Latency (in cycles): " << Cache_Infos[level].read_latency << endl;
+        cout << "\tWrite Latency (in cycles): " << Cache_Infos[level].write_latency << endl;
     }
     cout << "Trace Path: " << trace_file_path << endl;
     cout << "Verbose Mode: " << verbose << endl;
@@ -214,6 +221,7 @@ int main(int argc, char** argv)
         cout << "The test case with the given trace failed! Check the logs." << endl;
 
     mem_subsys->report_stats();
+    cout << "Total Latency (in cycles): " << dec << mem_subsys->total_latency << endl;
     
     return 1;
 }
