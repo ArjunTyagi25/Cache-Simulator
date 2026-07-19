@@ -31,9 +31,9 @@ To run the simulator directly, use:
 ```
 ./Cache-Simulator \
     --num_memory_levels <number of memory levels> \
-    --memory_level <name, memory size, page size, line size> \
+    --memory_level <name, memory size, page size, line size, read latency, write latency> \
     --num_cache_levels <number of cache levels> \
-    --cache_level <name, cache size, line size, associativity, replacement policy, write policy, write allocate> \
+    --cache_level <name, cache size, line size, associativity, replacement policy, write policy, write allocate, read latency, write latency> \
     --trace_file <path to trace file> \
     --verbose <true/false>
 ```
@@ -43,10 +43,10 @@ For example, assuming one level of memory along with two levels of cache hierarc
 ```
 ./Cache-Simulator \
     --num_memory_levels 1 \
-    --memory_level MAIN,128,32,4 \
+    --memory_level MAIN,128,32,4,100,100 \
     --num_cache_levels 2 \
-    --cache_level L1,8,4,1,first_line,write_through,false \
-    --cache_level L2,32,4,2,random,write_back,true \
+    --cache_level L1,8,4,1,first_line,write_through,false,1,1 \
+    --cache_level L2,32,4,2,random,write_back,true,1,1 \
     --trace_file ../test/sample_trace.txt \
     --verbose true
 ```
@@ -87,7 +87,7 @@ The YAML config file specifies the simulator parameters, including memory size, 
 - [x] Verbose mode
 - [x] Different write policies
 - [x] LRU, pseudo-LRU and FIFO replacement policy
-- [ ] Add cache and memory latency models
+- [x] Add cache and memory latency models
 - [x] Multi-level caches
 - [ ] Update trace to support multi-byte read/write operations
 - [ ] Distinguishing between virtual and physical address
