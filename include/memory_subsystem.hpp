@@ -9,6 +9,8 @@
 class memory_subsystem
 {
     public:
+        size_t total_latency;
+        
         /*
         * @brief Constructor for memory_subsystem class
         * @param main_memory_size_ Size of the main memory in bytes
@@ -52,6 +54,8 @@ class memory_subsystem
         std::vector<size_t> memory_sizes;
         std::vector<size_t> page_sizes;
         std::vector<size_t> memory_line_sizes;
+        std::vector<size_t> memory_read_latencies;
+        std::vector<size_t> memory_write_latencies;
 
         size_t num_cache_levels;
         std::vector<std::string> cache_names;
@@ -61,6 +65,9 @@ class memory_subsystem
         std::vector<std::string> replacement_policies;
         std::vector<std::string> write_policies;
         std::vector<bool> write_allocates;
+        std::vector<size_t> cache_read_latencies;
+        std::vector<size_t> cache_write_latencies;
+
         bool verbose;
         
         std::vector<cache*> caches;
@@ -77,6 +84,11 @@ class memory_subsystem
 
         std::vector<size_t> page_offset_bits;
         std::vector<size_t> page_offset_masks;
+
+        std::vector<size_t> cache_levels_read;
+        std::vector<size_t> cache_levels_write;
+        std::vector<size_t> memory_levels_read;
+        std::vector<size_t> memory_levels_write;
 
         /*
         * @brief Insert the requested cache line in all levels of cache hierarchy upon a read hit/miss
@@ -111,5 +123,10 @@ class memory_subsystem
         * @param level_ Cache level that evicted the line; all levels above this are checked.
         */
         void invalidate_upper_level_copies(size_t address_, size_t level_);
+
+        /*
+        * @brief Updates the total latency variable
+        */
+       void update_latency();
 };
 
