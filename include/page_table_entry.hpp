@@ -1,6 +1,7 @@
 #pragma once
 
-#include <vector>
+#include <cstdio>
+#include <variant>
 
 class page_table_entry
 {
@@ -9,8 +10,6 @@ class page_table_entry
         bool dirty_bit;
         /// @brief Valid bit of the entry
         bool valid_bit;
-        /// @brief Virtual Page Number (VPN)
-        size_t VPN;
         /// @brief Physical Page Number (PPN)
         size_t PPN;
         
@@ -18,22 +17,17 @@ class page_table_entry
         /**
          * @brief Construct a new `page_table_entry` object
          * 
-         * @param VPN_ Virtual Page Number (VPN) associated with the entry
          * @param PPN_ Physical Page Number (PPN) associated with the entry
          * @param dirty_bit_ Dirty bit of the entry
          * @param valid_bit_ Valid bit of the entry
          */
-        page_table_entry(size_t VPN_,
-                         size_t PPN_,
+        page_table_entry(size_t PPN_,
                          bool dirty_bit_,
                          bool valid_bit_);
 
-        /**
-         * @brief Returns the VPN associated with the entry
-         * 
-         * @return `size_t` representing the VPN 
-         */
-        size_t get_VPN();
+        void update_entry(size_t PPN_,
+                          bool dirty_bit_,
+                          bool valid_bit_);
 
         /**
          * @brief Return the PPN associated with the entry
