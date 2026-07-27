@@ -13,6 +13,8 @@ add_executable(${PROJECT_NAME}
 	src/memory/memory_line.cpp
 	src/cache/cache.cpp
 	src/cache/cache_line.cpp
+	src/page_table_entry.cpp
+	src/page_table.cpp
 )
 
 target_include_directories(${PROJECT_NAME} 
