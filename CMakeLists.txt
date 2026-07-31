@@ -14,6 +14,7 @@ add_executable(${PROJECT_NAME}
 	src/cache/cache.cpp
 	src/cache/cache_line.cpp
 	src/page_table_entry.cpp
+	src/TLB.cpp
 	src/page_table.cpp
 )
 
