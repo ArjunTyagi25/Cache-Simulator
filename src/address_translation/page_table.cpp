@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <vector>
 
-#include "../include/page_table.hpp"
+#include "../../include/address_translation/page_table.hpp"
 
 using namespace std;
 

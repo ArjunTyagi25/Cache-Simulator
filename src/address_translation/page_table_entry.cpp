@@ -1,4 +1,4 @@
-#include "../include/page_table_entry.hpp"
+#include "../../include/address_translation/page_table_entry.hpp"
 
 using namespace std;
 
