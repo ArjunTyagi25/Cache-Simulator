@@ -13,9 +13,10 @@ add_executable(${PROJECT_NAME}
 	src/memory/memory_line.cpp
 	src/cache/cache.cpp
 	src/cache/cache_line.cpp
-	src/page_table_entry.cpp
-	src/TLB.cpp
-	src/page_table.cpp
+	src/memory_management_unit/memory_management_unit.cpp
+	src/memory_management_unit/page_table.cpp
+	src/memory_management_unit/TLB.cpp
+	src/memory_management_unit/page_table_entry.cpp
 )
 
 target_include_directories(${PROJECT_NAME} 
