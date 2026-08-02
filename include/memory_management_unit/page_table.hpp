@@ -18,12 +18,10 @@ class page_table
         /**
          * @brief Construct a new page table object
          * 
-         * @param page_size_ Size of the page
-         * @param page_table_entry_size_ Size of a page table entry
+         * @param num_entries_ Number of entries in a page table
          * @param last_level_page_table_ `true` if this is the lowest level page table in a multi-level page table; `false` otherwise
          */
-        page_table(size_t page_size_,
-                   size_t page_table_entry_size_,
+        page_table(size_t num_entries_,
                    bool last_level_page_table_);
 
         /**
