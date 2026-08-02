@@ -1,7 +1,8 @@
 #pragma once
 
-#include<vector>
-#include<string>
+#include <vector>
+#include <string>
+
 #include "page.hpp"
 
 class memory
@@ -37,6 +38,14 @@ class memory
         */
         void write_line(std::vector<u_int8_t> write_data_, size_t address_);
 
+        /**
+         * @brief Based on the allocation policy, finds a free physical frame in the memory and returns its number
+         * 
+         * @param allocation_policy_ Allocation policy to be used for finding the free physical frame
+         * @return `size_t` representing the PFN 
+         */
+        size_t get_free_physical_frame(std::string allocation_policy_);
+
         /*
         * @brief Prints all the memory's content
         */
@@ -49,4 +58,6 @@ class memory
         size_t number_of_pages;
         size_t page_offset_bits;
         std::vector<page*> pages;
+
+        std::mt19937 gen;
 };
