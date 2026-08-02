@@ -8,8 +8,7 @@ memory_line::memory_line(size_t line_size_, bool valid_, string init_)
 {
     this->line_size = line_size_;
 
-    random_device rd;
-    mt19937 generator(rd());
+    mt19937 generator(0);
     uniform_int_distribution<uint16_t> dist(0x00, 0xFF);
     for (size_t i = 0; i < this->line_size; i++)
     {
