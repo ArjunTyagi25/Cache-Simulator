@@ -8,6 +8,8 @@ page::page(size_t page_size_, size_t line_size_, string init_)
 {
     this->page_size = page_size_;
     this->line_size = line_size_;
+    this->free = true;
+    this->dirty = false;
 
     if (this->page_size % this->line_size != 0)
         cout << "Page size is not a multiple of line size" << endl;
@@ -41,13 +43,15 @@ void page::write_byte(u_int8_t write_data_, size_t address_)
     size_t line_index = (address_ >> this->line_offset_bits) & this->line_index_mask;
     size_t line_offset = address_ & line_offset_mask;
 
-    this->page_lines[line_index]->write_byte(write_data_, line_offset); 
+    this->page_lines[line_index]->write_byte(write_data_, line_offset);
+    this->dirty = true; 
 }
 
 void page::write_line(vector<u_int8_t> line_data_, size_t address_)
 {
     size_t line_index = (address_ >> this->line_offset_bits) & this->line_index_mask;
     this->page_lines[line_index]->write_line(line_data_);
+    this->dirty = true;
 }
 
 void page::print_page_data()
@@ -58,6 +62,29 @@ void page::print_page_data()
         cout << i << "\t";
         this->page_lines[i]->print_line_data();
         cout << endl;
+    }
+}
+
+void page::set_free_bit(bool free_)
+{
+    this->free = free_;
+}
+
+bool page::get_free_bit()
+{
+    return this->free;
+}
+
+void page::update_dirty_bit()
+{
+    this->dirty = false;
+    for (size_t i = 0; i < this->number_of_lines; i++)
+    {
+        if(this->page_lines[i]->get_dirty_bit())
+        {
+            this->dirty = true;
+            break;
+        }
     }
 }
 

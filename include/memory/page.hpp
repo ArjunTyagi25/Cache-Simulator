@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+
 #include "memory_line.hpp"
 
 class page
@@ -41,10 +42,31 @@ class page
         */
         void print_page_data();
 
+        /**
+         * @brief Set the free bit to a desired value
+         * 
+         * @param free_ Desired value that you want of the free bit
+         */
+        void set_free_bit(bool free_);
+
+        /**
+         * @brief Get the free bit 
+         * 
+         * @return `free` bit of the page
+         */
+        bool get_free_bit();
+
+        /**
+         * @brief Update the dirty bit of the page by checking the dirty bit of each line stored in the page
+         */
+        void update_dirty_bit();
+
     private:
         std::vector<memory_line*> page_lines;
         size_t page_size;
         size_t line_size;
+        bool free;
+        bool dirty;
         size_t number_of_lines;
         size_t page_offset_bits;
         size_t page_offset_mask;
