@@ -67,9 +67,9 @@ page_table_entry* TLB::update_entry(size_t VPN_,
 
 void TLB::print_TLB_data()
 {
-    cout << "Entry #\tDirty\tValid\tVPN\tPFN" << endl;
+    cout << "Entry #\tValid\tDirty\tVPN\tPFN" << endl;
     for (size_t i = 0; i < this->num_entries; i++)
     {
-        cout << i << "\t" << this->TLB_content[i]->get_dirty_bit() << "\t" << this->TLB_content[i]->get_valid_bit() << "\t" << hex << this->TLB_content[i]->get_VPN() << "\t" << this->TLB_content[i]->get_PFN() << endl; 
+        cout << i << "\t" << this->TLB_content[i]->get_valid_bit() << "\t" << this->TLB_content[i]->get_dirty_bit() << "\t" << hex << this->TLB_content[i]->get_VPN() << "\t" << this->TLB_content[i]->get_PFN() << endl; 
     }
 }
