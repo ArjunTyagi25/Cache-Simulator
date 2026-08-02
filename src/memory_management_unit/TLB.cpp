@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "../../include/address_translation/TLB.hpp"
+#include "../../include/memory_management_unit/TLB.hpp"
 
 using namespace std;
 

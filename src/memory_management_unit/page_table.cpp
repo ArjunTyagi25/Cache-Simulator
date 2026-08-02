@@ -1,15 +1,14 @@
 #include <cstdio>
 #include <vector>
 
-#include "../../include/address_translation/page_table.hpp"
+#include "../../include/memory_management_unit/page_table.hpp"
 
 using namespace std;
 
-page_table::page_table(size_t page_size_,
-                       size_t page_table_entry_size_,
+page_table::page_table(size_t num_entries_,
                        bool last_level_page_table_)
 {
-    this->num_entries = page_size_/page_table_entry_size_;
+    this->num_entries = num_entries_;
 
     for (size_t i = 0; i < this->num_entries; i++)
     {
