@@ -10,31 +10,50 @@ class page_table_entry
         bool dirty_bit;
         /// @brief Valid bit of the entry
         bool valid_bit;
-        /// @brief Physical Page Number (PPN)
-        size_t PPN;
+        /// @brief Physical Page Number (PFN)
+        size_t PFN;
+        /// @brief Virtual Page Number (VPN)
+        size_t VPN;
         
     public:
         /**
          * @brief Construct a new `page_table_entry` object
          * 
-         * @param PPN_ Physical Page Number (PPN) associated with the entry
+         * @param VPN_ Virtual Page Number (VPN) associated with the entry
+         * @param PFN_ Physical Frame Number (PFN) associated with the entry
          * @param dirty_bit_ Dirty bit of the entry
          * @param valid_bit_ Valid bit of the entry
          */
-        page_table_entry(size_t PPN_,
+        page_table_entry(size_t VPN_,
+                         size_t PFN_,
                          bool dirty_bit_,
                          bool valid_bit_);
 
-        void update_entry(size_t PPN_,
+        /**
+         * @brief Update the entry with new values
+         * 
+         * @param VPN_ 
+         * @param PFN_ 
+         * @param dirty_bit_ 
+         * @param valid_bit_ 
+         */
+        void update_entry(size_t VPN_,
+                          size_t PFN_,
                           bool dirty_bit_,
                           bool valid_bit_);
 
         /**
-         * @brief Return the PPN associated with the entry
+         * @brief Get the VPN associated with the entry
          * 
-         * @return `size_t` representing the PPN
+         * @return size_t 
          */
-        size_t get_PPN();
+        size_t get_VPN();
+        /**
+         * @brief Return the PFN associated with the entry
+         * 
+         * @return `size_t` representing the PFN
+         */
+        size_t get_PFN();
 
         /**
          * @brief Get the dirty bit 

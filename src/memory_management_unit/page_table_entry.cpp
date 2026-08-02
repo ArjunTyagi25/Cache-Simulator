@@ -2,27 +2,36 @@
 
 using namespace std;
 
-page_table_entry::page_table_entry(size_t PPN_,
+page_table_entry::page_table_entry(size_t VPN_,
+                                   size_t PFN_,
                                    bool dirty_bit_,
                                    bool valid_bit_)
 {
-    this->PPN = PPN_;
+    this->VPN = VPN_;
+    this->PFN = PFN_;
     this->dirty_bit = dirty_bit_;
     this->valid_bit = valid_bit_;
 }
 
-void page_table_entry::update_entry(size_t PPN_,
+void page_table_entry::update_entry(size_t VPN_,
+                                    size_t PFN_,
                                     bool dirty_bit_,
                                     bool valid_bit_)
 {
-    this->PPN = PPN_;
+    this->VPN = VPN_;
+    this->PFN = PFN_;
     this->dirty_bit = dirty_bit_;
     this->valid_bit = valid_bit_;
 }
 
-size_t page_table_entry::get_PPN()
+size_t page_table_entry::get_VPN()
 {
-    return this->PPN;
+    return this->VPN;
+}
+
+size_t page_table_entry::get_PFN()
+{
+    return this->PFN;
 }
 
 bool page_table_entry::get_dirty_bit()
