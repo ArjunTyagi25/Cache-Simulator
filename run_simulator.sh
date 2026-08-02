@@ -50,6 +50,17 @@ do
   cmd+=(--cache_level "$level_config")
 done
 
+num_bits_virtual_address=$(yq -r ".address_translation.num_bits_virtual_address" "$config")
+num_bits_physical_address=$(yq -r ".address_translation.num_bits_physical_address" "$config")
+num_levels_page_table=$(yq -r ".address_translation.num_levels_page_table" "$config")
+num_size_PTE=$(yq -r ".address_translation.num_size_PTE" "$config")
+num_entries_TLB=$(yq -r ".address_translation.num_entries_TLB" "$config")
+allocation_policy=$(yq -r ".address_translation.allocation_policy" "$config")
+
+address_translation_config="${num_bits_virtual_address},${num_bits_physical_address},${num_levels_page_table},${num_size_PTE},${num_entries_TLB},${allocation_policy}"
+
+cmd+=(--address_translation "$address_translation_config")
+
 cd "$SCRIPT_DIR/build/"
 
 echo "Running: ${cmd[@]}"
