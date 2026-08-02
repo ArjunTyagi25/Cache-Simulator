@@ -16,9 +16,6 @@ page::page(size_t page_size_, size_t line_size_, string init_)
 
     this->number_of_lines = this->page_size / this->line_size;
 
-    this->page_offset_bits = log2(this->page_size);
-    this->page_offset_mask = (1u << this->page_offset_bits) - 1;
-
     this->line_offset_bits = log2(this->line_size);
     this->line_offset_mask = (1u << this->line_offset_bits) - 1;
 
