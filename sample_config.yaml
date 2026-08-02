@@ -1,8 +1,8 @@
 simulation:
   name: sample_test
   description: This is a sample configuration file
-  verbose: false
-  trace_file: ../test/sample_trace.txt
+  verbose: true
+  trace_file: ../test/sample_trace_address_translation.txt
 
 memory_hierarchy:
   levels:
@@ -34,3 +34,11 @@ cache_hierarchy:
       write_allocate: true
       read_latency: 20
       write_latency: 20
+
+address_translation:
+  num_bits_virtual_address: 10
+  num_bits_physical_address: 7
+  num_levels_page_table: 1
+  num_size_PTE: 8
+  num_entries_TLB: 16 
+  allocation_policy: first_free_page
