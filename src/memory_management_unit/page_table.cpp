@@ -14,7 +14,7 @@ page_table::page_table(size_t num_entries_,
     {
         if (last_level_page_table_)
         {
-            page_table_entry* PTE = new page_table_entry(0, false, false);
+            page_table_entry* PTE = new page_table_entry(0, 0, false, false);
             this->page_table_.push_back(PTE);
         }
         else
