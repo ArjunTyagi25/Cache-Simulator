@@ -11,6 +11,7 @@ memory_subsystem::memory_subsystem(size_t num_memory_levels_,
                                    vector<MemoryInfo> memory_infos_,
                                    size_t num_cache_levels_,
                                    vector<CacheInfo> cache_infos_,
+                                   AddressTranslationInfo address_translation_info,
                                    bool verbose_)
 {
     this->verbose = verbose_;
@@ -71,11 +72,25 @@ memory_subsystem::memory_subsystem(size_t num_memory_levels_,
         }
     }
 
+    this->num_bits_virtual_address = address_translation_info.num_bits_virtual_address;
+    this->num_bits_physical_address = address_translation_info.num_bits_physical_address;
+    this->num_levels_page_table = address_translation_info.num_levels_page_table;
+    this->PTE_size = address_translation_info.PTE_size;
+    this->TLB_size = address_translation_info.TLB_size;
+    this->allocation_policy = address_translation_info.allocation_policy;
+
+    this->MMU = new memory_management_unit(this->num_bits_virtual_address, this->num_bits_physical_address, this->num_levels_page_table, this->PTE_size, this->TLB_size, this->page_sizes[0], this->allocation_policy);
+    if (this->verbose)
+    {
+        cout << "--------------------INITIAL CONTENT OF THE TLB--------------------" << endl;
+        this->MMU->print_TLB_data();
+    }
+
     if (this->verbose)
         cout << "-------------------------------------------------------------------------------------------" << endl;
 }
 
-u_int8_t memory_subsystem::read(size_t address_)
+u_int8_t memory_subsystem::read(size_t virtual_address_)
 {
     size_t current_cache_level;
     size_t current_memory_level = 0;
@@ -88,10 +103,12 @@ u_int8_t memory_subsystem::read(size_t address_)
     this->memory_levels_write = vector<size_t>(this->num_memory_levels, 0);
     optional<u_int8_t> read_byte;
 
+    size_t physical_address = this->MMU->address_translate(virtual_address_, false, this->memories);
+
     // Check all levels of cache starting from level 0 till the data is found
     for (current_cache_level = 0; current_cache_level < this->num_cache_levels; current_cache_level++)
     {
-        read_byte = this->caches[current_cache_level]->read_byte(address_);
+        read_byte = this->caches[current_cache_level]->read_byte(physical_address);
         this->cache_levels_read[current_cache_level]++;
         if (read_byte.has_value())
             break;
@@ -102,32 +119,36 @@ u_int8_t memory_subsystem::read(size_t address_)
         status = "Hit";
 
         // Fetch line from the level at which cache hit happened
-        optional<cache_line*> source_line = this->caches[current_cache_level]->get_cache_line(address_);
+        optional<cache_line*> source_line = this->caches[current_cache_level]->get_cache_line(physical_address);
 
-        this->read_fill_path(source_line.value()->get_line_data(), current_cache_level, address_);
+        this->read_fill_path(source_line.value()->get_line_data(), current_cache_level, physical_address);
         
         this->update_latency();
         size_t latency = this->total_latency - current_latency;
 
         if (verbose)
         {
-            cout << "Operation: READ " << address_ << endl;
+            cout << "Operation: READ " << virtual_address_ << endl;
+            cout << "Physical Address: " << physical_address << endl;
             for (size_t level = 0; level < this->num_cache_levels; level++)
             {
                 cout << this->cache_names[level] << "'s TAG, INDEX, OFFSET" << endl; 
-                cout << "\tTag: " << hex << (address_ >> (this->index_bits[level] + this->cache_line_offset_bits[level])) << endl;
-                cout << "\tIndex: " << hex << ((address_ >> this->cache_line_offset_bits[level]) & this->index_masks[level]) << endl;
-                cout << "\tLine Offset: " << hex << (address_ & this->cache_line_offset_masks[level]) << endl;
+                cout << "\tTag: " << hex << (physical_address >> (this->index_bits[level] + this->cache_line_offset_bits[level])) << endl;
+                cout << "\tIndex: " << hex << ((physical_address >> this->cache_line_offset_bits[level]) & this->index_masks[level]) << endl;
+                cout << "\tLine Offset: " << hex << (physical_address & this->cache_line_offset_masks[level]) << endl;
             }
             for (size_t level = 0; level < this->num_memory_levels; level++)
             {
-                cout << this->memory_names[level] << "'s PPN & OFFSET" << endl;
-                cout << "\tPage Number: " << hex << (address_ >> this->page_offset_bits[level]) << endl;
-                cout << "\tPage Offset: " << hex << (address_ & this->page_offset_masks[level]) << endl;
+                cout << this->memory_names[level] << "'s VPN, PFN & OFFSET" << endl;
+                cout << "\tVirtual Page Number: " << hex << (virtual_address_ >> this->page_offset_bits[level]) << endl;
+                cout << "\tPhysical Frame Number: " << hex << (physical_address >> this->page_offset_bits[level]) << endl;
+                cout << "\tPage Offset: " << hex << (physical_address & this->page_offset_masks[level]) << endl;
             }
             cout << "Status: " << status << " at cache " << this->cache_names[current_cache_level] << ", level " << current_cache_level << endl; 
             cout << "Latency (in cycles): " << dec << latency << endl;
             cout << "Read Value: " << hex << static_cast<size_t>(*read_byte) << endl; 
+            cout << "--------------------CONTENT OF THE TLB--------------------" << endl;
+            this->MMU->print_TLB_data();
             for (size_t level = 0; level < this->num_cache_levels; level++)
             {
                 cout << "--------------------CONTENT OF " << this->cache_names[level] << " CACHE---------------------" << endl;
@@ -148,36 +169,40 @@ u_int8_t memory_subsystem::read(size_t address_)
         status = "Miss";
 
         // Fetch the line from the memory
-        memory_line* source_line = this->memories[current_memory_level]->get_line(address_);
+        memory_line* source_line = this->memories[current_memory_level]->get_line(physical_address);
         this->memory_levels_read[current_memory_level]++;
 
-        size_t offset = address_ & this->memory_line_offset_masks[current_memory_level];
+        size_t offset = physical_address & this->memory_line_offset_masks[current_memory_level];
         read_byte = source_line->get_line_data()[offset];
 
-        this->read_fill_path(source_line->get_line_data(), current_cache_level, address_);
+        this->read_fill_path(source_line->get_line_data(), current_cache_level, physical_address);
 
         this->update_latency();
         size_t latency = this->total_latency - current_latency;
         
         if (verbose)
         {
-            cout << "Operation: READ " << address_ << endl;
+            cout << "Operation: READ " << virtual_address_ << endl;
+            cout << "Physical Address: " << physical_address << endl;
             for (size_t level = 0; level < this->num_cache_levels; level++)
             {
                 cout << this->cache_names[level] << "'s TAG, INDEX, OFFSET" << endl; 
-                cout << "\tTag: " << hex << (address_ >> (this->index_bits[level] + this->cache_line_offset_bits[level])) << endl;
-                cout << "\tIndex: " << hex << ((address_ >> this->cache_line_offset_bits[level]) & this->index_masks[level]) << endl;
-                cout << "\tLine Offset: " << hex << (address_ & this->cache_line_offset_masks[level]) << endl;
+                cout << "\tTag: " << hex << (physical_address >> (this->index_bits[level] + this->cache_line_offset_bits[level])) << endl;
+                cout << "\tIndex: " << hex << ((physical_address >> this->cache_line_offset_bits[level]) & this->index_masks[level]) << endl;
+                cout << "\tLine Offset: " << hex << (physical_address & this->cache_line_offset_masks[level]) << endl;
             }
             for (size_t level = 0; level < this->num_memory_levels; level++)
             {
-                cout << this->memory_names[level] << "'s PPN & OFFSET" << endl;
-                cout << "\tPage Number: " << hex << (address_ >> this->page_offset_bits[level]) << endl;
-                cout << "\tPage Offset: " << hex << (address_ & this->page_offset_masks[level]) << endl;
+                cout << this->memory_names[level] << "'s VPN, PFN & OFFSET" << endl;
+                cout << "\tVirtual Page Number: " << hex << (virtual_address_ >> this->page_offset_bits[level]) << endl;
+                cout << "\tPhysical Frame Number: " << hex << (physical_address >> this->page_offset_bits[level]) << endl;
+                cout << "\tPage Offset: " << hex << (physical_address & this->page_offset_masks[level]) << endl;
             }
             cout << "Status: " << status << " at all cache levels." << endl; 
             cout << "Latency (in cycles): " << dec << latency << endl;
             cout << "Read Value: " << hex << static_cast<size_t>(*read_byte) << endl;
+            cout << "--------------------CONTENT OF THE TLB--------------------" << endl;
+            this->MMU->print_TLB_data();
             for (size_t level = 0; level < this->num_cache_levels; level++)
             {
                 cout << "--------------------CONTENT OF " << this->cache_names[level] << " CACHE---------------------" << endl;
@@ -195,7 +220,7 @@ u_int8_t memory_subsystem::read(size_t address_)
     }
 }
 
-void memory_subsystem::write(size_t address_, u_int8_t data_)
+void memory_subsystem::write(size_t virtual_address_, u_int8_t data_)
 {
     size_t current_cache_level = 0;
     size_t current_memory_level = 0;
@@ -207,14 +232,17 @@ void memory_subsystem::write(size_t address_, u_int8_t data_)
     this->memory_levels_read = vector<size_t>(this->num_memory_levels, 0);
     this->memory_levels_write = vector<size_t>(this->num_memory_levels, 0);
     bool cache_hit;
+    cout << "Translating address..." << endl;
+    size_t physical_address = this->MMU->address_translate(virtual_address_, true, this->memories);
+    cout << "Done translating address..." << endl;
     // Check all levels of cache starting from level 0 till the data is found
     for (current_cache_level = 0; current_cache_level < this->num_cache_levels; current_cache_level++)
     {
-        cache_hit = this->caches[current_cache_level]->find_byte(address_);
+        cache_hit = this->caches[current_cache_level]->find_byte(physical_address);
         this->cache_levels_read[current_cache_level]++;
         if (cache_hit)
         {
-            this->caches[current_cache_level]->update_write_hit_stats(address_);
+            this->caches[current_cache_level]->update_write_hit_stats(physical_address);
             break;
         }
         else
@@ -226,16 +254,16 @@ void memory_subsystem::write(size_t address_, u_int8_t data_)
         status = "Hit";
 
         // Get the cache line from the level in which cache hit took place
-        vector<u_int8_t> source_line_data = this->caches[current_cache_level]->get_cache_line(address_).value()->get_line_data();
+        vector<u_int8_t> source_line_data = this->caches[current_cache_level]->get_cache_line(physical_address).value()->get_line_data();
 
         // Fill all cache levels from 0 till the level at which hit happened with the cache line
-        bool update_memory = this->write_fill_path(source_line_data, current_cache_level, address_, data_, true);
+        bool update_memory = this->write_fill_path(source_line_data, current_cache_level, physical_address, data_, true);
         
         if (update_memory)
         {
             vector<u_int8_t> dirty_line_data = source_line_data;
-            dirty_line_data[address_ & this->memory_line_offset_masks[current_memory_level]] = data_;
-            this->memories[current_memory_level]->write_line(dirty_line_data, address_);
+            dirty_line_data[physical_address & this->memory_line_offset_masks[current_memory_level]] = data_;
+            this->memories[current_memory_level]->write_line(dirty_line_data, physical_address);
 
             this->memory_levels_write[current_memory_level]++;
         }
@@ -245,22 +273,26 @@ void memory_subsystem::write(size_t address_, u_int8_t data_)
 
         if (verbose)
         {
-            cout << "Operation: WRITE " << address_ << " " << hex << static_cast<size_t>(data_) << endl;
+            cout << "Operation: WRITE " << virtual_address_ << " " << hex << static_cast<size_t>(data_) << endl;
+            cout << "Physical Address: " << physical_address << endl;
             for (size_t level = 0; level < this->num_cache_levels; level++)
             {
                 cout << this->cache_names[level] << "'s TAG, INDEX, OFFSET" << endl; 
-                cout << "\tTag: " << hex << (address_ >> (this->index_bits[level] + this->cache_line_offset_bits[level])) << endl;
-                cout << "\tIndex: " << hex << ((address_ >> this->cache_line_offset_bits[level]) & this->index_masks[level]) << endl;
-                cout << "\tLine Offset: " << hex << (address_ & this->cache_line_offset_masks[level]) << endl;
+                cout << "\tTag: " << hex << (physical_address >> (this->index_bits[level] + this->cache_line_offset_bits[level])) << endl;
+                cout << "\tIndex: " << hex << ((physical_address >> this->cache_line_offset_bits[level]) & this->index_masks[level]) << endl;
+                cout << "\tLine Offset: " << hex << (physical_address & this->cache_line_offset_masks[level]) << endl;
             }
             for (size_t level = 0; level < this->num_memory_levels; level++)
             {
-                cout << this->memory_names[level] << "'s PPN & OFFSET" << endl;
-                cout << "\tPage Number: " << hex << (address_ >> this->page_offset_bits[level]) << endl;
-                cout << "\tPage Offset: " << hex << (address_ & this->page_offset_masks[level]) << endl;
+                cout << this->memory_names[level] << "'s VPN, PFN & OFFSET" << endl;
+                cout << "\tVirtual Page Number: " << hex << (virtual_address_ >> this->page_offset_bits[level]) << endl;
+                cout << "\tPhysical Frame Number: " << hex << (physical_address >> this->page_offset_bits[level]) << endl;
+                cout << "\tPage Offset: " << hex << (physical_address & this->page_offset_masks[level]) << endl;
             }
             cout << "Status: " << status << " at cache " << this->cache_names[current_cache_level] << ", level " << current_cache_level << endl; 
             cout << "Latency (in cycles): " << dec << latency << endl;
+            cout << "--------------------CONTENT OF THE TLB--------------------" << endl;
+            this->MMU->print_TLB_data();
             for (size_t level = 0; level < this->num_cache_levels; level++)
             {
                 cout << "--------------------CONTENT OF " << this->cache_names[level] << " CACHE---------------------" << endl;
@@ -279,17 +311,17 @@ void memory_subsystem::write(size_t address_, u_int8_t data_)
         status = "Miss";
 
         // Get the line's data from the memory
-        vector<u_int8_t> source_line_data = this->memories[current_memory_level]->get_line(address_)->get_line_data();
+        vector<u_int8_t> source_line_data = this->memories[current_memory_level]->get_line(physical_address)->get_line_data();
         this->memory_levels_read[current_memory_level]++;
 
         // Fill all cache levels
-        bool update_memory = this->write_fill_path(source_line_data, current_cache_level, address_, data_, false);
+        bool update_memory = this->write_fill_path(source_line_data, current_cache_level, physical_address, data_, false);
         
         if (update_memory)
         {
             vector<u_int8_t> dirty_line_data = source_line_data;
-            dirty_line_data[address_ & this->memory_line_offset_masks[current_memory_level]] = data_;
-            this->memories[current_memory_level]->write_line(dirty_line_data, address_);
+            dirty_line_data[physical_address & this->memory_line_offset_masks[current_memory_level]] = data_;
+            this->memories[current_memory_level]->write_line(dirty_line_data, physical_address);
 
             this->memory_levels_write[current_memory_level]++;
             this->memory_levels_read[current_memory_level]--;
@@ -300,22 +332,26 @@ void memory_subsystem::write(size_t address_, u_int8_t data_)
 
         if (verbose)
         {
-            cout << "Operation: WRITE " << address_ << " " << hex << static_cast<size_t>(data_) << endl;
+            cout << "Operation: WRITE " << virtual_address_ << " " << hex << static_cast<size_t>(data_) << endl;
+            cout << "Physical Address: " << physical_address << endl;
             for (size_t level = 0; level < this->num_cache_levels; level++)
             {
                 cout << this->cache_names[level] << "'s TAG, INDEX, OFFSET" << endl; 
-                cout << "\tTag: " << hex << (address_ >> (this->index_bits[level] + this->cache_line_offset_bits[level])) << endl;
-                cout << "\tIndex: " << hex << ((address_ >> this->cache_line_offset_bits[level]) & this->index_masks[level]) << endl;
-                cout << "\tLine Offset: " << hex << (address_ & this->cache_line_offset_masks[level]) << endl;
+                cout << "\tTag: " << hex << (physical_address >> (this->index_bits[level] + this->cache_line_offset_bits[level])) << endl;
+                cout << "\tIndex: " << hex << ((physical_address >> this->cache_line_offset_bits[level]) & this->index_masks[level]) << endl;
+                cout << "\tLine Offset: " << hex << (physical_address & this->cache_line_offset_masks[level]) << endl;
             }
             for (size_t level = 0; level < this->num_memory_levels; level++)
             {
-                cout << this->memory_names[level] << "'s PPN & OFFSET" << endl;
-                cout << "\tPage Number: " << hex << (address_ >> this->page_offset_bits[level]) << endl;
-                cout << "\tPage Offset: " << hex << (address_ & this->page_offset_masks[level]) << endl;
+                cout << this->memory_names[level] << "'s VPN, PFN & OFFSET" << endl;
+                cout << "\tVirtual Page Number: " << hex << (virtual_address_ >> this->page_offset_bits[level]) << endl;
+                cout << "\tPhysical Frame Number: " << hex << (physical_address >> this->page_offset_bits[level]) << endl;
+                cout << "\tPage Offset: " << hex << (physical_address & this->page_offset_masks[level]) << endl;
             }
             cout << "Status: " << status << " at all cache levels." << endl; 
             cout << "Latency (in cycles): " << dec << latency << endl;
+            cout << "--------------------CONTENT OF THE TLB--------------------" << endl;
+            this->MMU->print_TLB_data();
             for (size_t level = 0; level < this->num_cache_levels; level++)
             {
                 cout << "--------------------CONTENT OF " << this->cache_names[level] << " CACHE---------------------" << endl;

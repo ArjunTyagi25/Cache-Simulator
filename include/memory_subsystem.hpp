@@ -1,10 +1,14 @@
 #pragma once
 
 #include <string>
+#include <optional>
+
 #include "./cache/cache.hpp"
 #include "./memory/memory.hpp"
 #include "./cache/cache_info.hpp"
 #include "./memory/memory_info.hpp"
+#include "./memory_management_unit/address_translation_info.hpp"
+#include "./memory_management_unit/memory_management_unit.hpp"
 
 class memory_subsystem
 {
@@ -27,21 +31,22 @@ class memory_subsystem
                          std::vector<MemoryInfo> memory_infos_,
                          size_t num_cache_levels_,
                          std::vector<CacheInfo> cache_infos_,
+                         AddressTranslationInfo address_translation_info,
                          bool verbose_);
         
         /*
         * @brief Read an address
-        * @param address_ Address of the location to be read
+        * @param virtual_address_ Virtual address of the location to be read
         * @return Returns the data read at address, either from cache or main memory
         */
-        u_int8_t read(size_t address_);
+        u_int8_t read(size_t virtual_address_);
 
         /*
         * @brief Write an address with given data
-        * @param address_ Address of the location to be written
+        * @param virtual_address_ Virtual address of the location to be written
         * @param data_ Data to be written at the given address
         */
-        void write(size_t address_, u_int8_t data_);
+        void write(size_t virtual_address_, u_int8_t data_);
 
         /*
         @brief Report all the cache statistics
@@ -72,6 +77,7 @@ class memory_subsystem
         
         std::vector<cache*> caches;
         std::vector<memory*> memories;
+        memory_management_unit* MMU;
 
         std::vector<size_t> memory_line_offset_bits;
         std::vector<size_t> memory_line_offset_masks;
@@ -89,6 +95,14 @@ class memory_subsystem
         std::vector<size_t> cache_levels_write;
         std::vector<size_t> memory_levels_read;
         std::vector<size_t> memory_levels_write;
+
+        size_t num_bits_virtual_address;
+        size_t num_bits_physical_address;
+        size_t num_levels_page_table;
+        size_t PTE_size;
+        size_t TLB_size;
+        std::string allocation_policy;
+        
 
         /*
         * @brief Insert the requested cache line in all levels of cache hierarchy upon a read hit/miss
@@ -127,6 +141,6 @@ class memory_subsystem
         /*
         * @brief Updates the total latency variable
         */
-       void update_latency();
+        void update_latency();
 };
 
