@@ -90,6 +90,23 @@ memory_subsystem::memory_subsystem(size_t num_memory_levels_,
         cout << "-------------------------------------------------------------------------------------------" << endl;
 }
 
+memory_subsystem::~memory_subsystem()
+{
+    for (size_t level = 0; level < this->num_cache_levels; level++)
+    {
+        delete this->caches[level];
+    }
+    this->caches.clear();
+
+    for (size_t level = 0; level < this->num_memory_levels; level++)
+    {
+        delete this->memories[level];
+    }
+    this->memories.clear();
+
+    delete this->MMU;
+}
+
 u_int8_t memory_subsystem::read(size_t virtual_address_)
 {
     size_t current_cache_level;
@@ -232,9 +249,9 @@ void memory_subsystem::write(size_t virtual_address_, u_int8_t data_)
     this->memory_levels_read = vector<size_t>(this->num_memory_levels, 0);
     this->memory_levels_write = vector<size_t>(this->num_memory_levels, 0);
     bool cache_hit;
-    cout << "Translating address..." << endl;
+
     size_t physical_address = this->MMU->address_translate(virtual_address_, true, this->memories);
-    cout << "Done translating address..." << endl;
+
     // Check all levels of cache starting from level 0 till the data is found
     for (current_cache_level = 0; current_cache_level < this->num_cache_levels; current_cache_level++)
     {
