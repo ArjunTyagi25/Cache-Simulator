@@ -26,6 +26,11 @@ class TLB
         TLB(size_t num_entries_);
 
         /**
+         * @brief Destroy the TLB object
+         */
+        ~TLB();
+
+        /**
          * @brief Find an entry in the TLB
          * 
          * @param VPN_ VPN from the virtual address
@@ -47,5 +52,8 @@ class TLB
                                        bool dirty_bit_,
                                        bool valid_bit_);
 
+        /**
+         * @brief Print the TLB's content
+         */
         void print_TLB_data();
 };

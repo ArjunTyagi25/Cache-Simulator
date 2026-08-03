@@ -16,6 +16,15 @@ TLB::TLB(size_t num_entries_)
     this->gen = mt19937(0);
 }
 
+TLB::~TLB()
+{
+    for (size_t i = 0; i < this->num_entries; i++)
+    {
+        delete this->TLB_content[i];
+    }
+    this->TLB_content.clear();
+}
+
 page_table_entry* TLB::find_entry(size_t VPN_)
 {
     for (size_t i = 0; i < this->num_entries; i++)
