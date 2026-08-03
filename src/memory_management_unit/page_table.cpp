@@ -24,6 +24,18 @@ page_table::page_table(size_t num_entries_,
     }
 }
 
+page_table::~page_table()
+{
+    for (size_t i = 0; i < this->num_entries; i++)
+    {
+        if (std::holds_alternative<page_table_entry*>(this->page_table_[i])) 
+        {
+            delete std::get<page_table_entry*>(this->page_table_[i]);
+        }
+    }
+    this->page_table_.clear();
+}
+
 variant<monostate, page_table*, page_table_entry*> page_table::find_entry(size_t index_)
 {
     // Entry in the page table is empty/NULL

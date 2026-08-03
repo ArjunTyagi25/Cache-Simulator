@@ -25,6 +25,11 @@ class page_table
                    bool last_level_page_table_);
 
         /**
+         * @brief Destroy the page table object
+         */
+        ~page_table();
+
+        /**
          * @brief Find and fetch an entry from the page table
          * 
          * @param index_ Index number in the page table that you want to fetch
