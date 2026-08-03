@@ -30,6 +30,11 @@ class page_table_entry
                          bool valid_bit_);
 
         /**
+         * @brief Destroy the page table entry object
+         */
+        ~page_table_entry() = default;
+
+        /**
          * @brief Update the entry with new values
          * 
          * @param VPN_ 
