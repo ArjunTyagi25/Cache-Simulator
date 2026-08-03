@@ -27,6 +27,15 @@ memory::memory(size_t memory_size_, size_t page_size_, size_t line_size_, string
     this->gen = mt19937(0);
 }
 
+memory::~memory() 
+{
+    for (size_t i = 0; i < this->number_of_pages; i++)
+    {
+        delete this->pages[i];
+    }
+    this->pages.clear();
+}
+
 memory_line* memory::get_line(size_t address_)
 {
     size_t page_number = address_ >> this->page_offset_bits;
