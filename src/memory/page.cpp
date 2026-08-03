@@ -29,6 +29,15 @@ page::page(size_t page_size_, size_t line_size_, string init_)
     }
 }
 
+page::~page() 
+{
+    for (size_t i = 0; i < this->number_of_lines; i++)
+    {
+        delete this->page_lines[i];
+    }
+    this->page_lines.clear();
+}
+
 memory_line* page::get_line(size_t address_)
 {
     size_t line_index = (address_ >> this->line_offset_bits) & this->line_index_mask;
