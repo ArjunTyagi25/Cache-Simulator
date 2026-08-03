@@ -2,7 +2,7 @@ simulation:
   name: sample_test
   description: This is a sample configuration file
   verbose: true
-  trace_file: ../test/sample_trace_address_translation.txt
+  trace_file: ../test/sample_trace.txt
 
 memory_hierarchy:
   levels:
