@@ -70,6 +70,15 @@ cache::cache(size_t cache_size_, size_t line_size_, size_t assoc_, string replac
     this->miss_rate = 0;
 }
 
+cache::~cache() 
+{
+    for (size_t i = 0; i < this->number_of_total_lines; i++)
+    {
+        delete this->cache_lines[i];
+    }
+    this->cache_lines.clear();
+}
+
 std::optional<u_int8_t> cache::read_byte(size_t address_)
 {
     size_t offset = address_ & this->offset_mask;
