@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstring>
 #include <cmath>
+
 #include "../include/memory_subsystem.hpp"
 
 using namespace std;
@@ -39,7 +40,7 @@ vector<vector<string>> read_trace_file(string trace_file_path)
     return trace;
 }
 
-vector<MemoryInfo>extract_memory_level_info(vector<string> memory_info_string_)
+vector<MemoryInfo> extract_memory_level_info(vector<string> memory_info_string_)
 {
     vector<MemoryInfo> Memory_Infos;
     for (string memory_level : memory_info_string_)
@@ -108,11 +109,38 @@ vector<CacheInfo> extract_cache_level_info(vector<string> cache_info_string_)
     return Cache_Infos;
 }
 
+AddressTranslationInfo extract_address_translation_info(string address_translation_info_string_)
+{
+    stringstream ss(address_translation_info_string_);
+    string token;
+    vector<string> result;
+
+    while (std::getline(ss, token, ',')) 
+        result.push_back(token);
+
+    if (result.size() != 6)
+    {
+        throw invalid_argument(
+            "Invalid address translation config. Expected 5 arguments"
+        );
+    }
+
+    struct AddressTranslationInfo address_translation_info;
+    address_translation_info.num_bits_virtual_address = stoul(result[0]);
+    address_translation_info.num_bits_physical_address = stoul(result[1]);
+    address_translation_info.num_levels_page_table = stoul(result[2]);
+    address_translation_info.PTE_size = stoul(result[3]);
+    address_translation_info.TLB_size = stoul(result[4]);
+    address_translation_info.allocation_policy = result[5];
+    
+    return address_translation_info;
+}
+
 int main(int argc, char** argv)
 {
-    if (argc < 13)
+    if (argc < 15)
     {
-        cerr << "Missing arguments. Usage: " << argv[0] << " --num_memory_levels <number of memory levels> --memory_level <details of memory level> --num_cache_levels <number of levels of caches> --cache_level <details about cache level> --trace_file <path to trace file> --verbose true" << endl;
+        cerr << "Missing arguments. Usage: " << argv[0] << " --num_memory_levels <number of memory levels> --memory_level <details of memory level> --num_cache_levels <number of levels of caches> --cache_level <details about cache level> --address_translation <details about address translation> --trace_file <path to trace file> --verbose true" << endl;
         return -1;
     }
 
@@ -120,6 +148,7 @@ int main(int argc, char** argv)
     vector<string> memory_info_string;
     size_t num_cache_levels = 2;
     vector<string> cache_info_string;
+    string address_translation_info_string;
     string trace_file_path = "../test/sample_trace.txt";
     bool verbose = false;
 
@@ -133,19 +162,22 @@ int main(int argc, char** argv)
             num_cache_levels = strtoull(argv[i+1], NULL, 10);
         else if (!strcmp(argv[i], "--cache_level"))
             cache_info_string.push_back(argv[i+1]);
+        else if (!strcmp(argv[i], "--address_translation"))
+            address_translation_info_string = argv[i+1];
         else if (!strcmp(argv[i], "--trace_file"))
             trace_file_path = argv[i+1];
         else if (!strcmp(argv[i], "--verbose"))
             verbose = (!strcmp(argv[i+1], "true")); 
         else
         {
-            cerr << "Undefined flag. Usage: " << argv[0] << " --memory_size <memory size in B> --page_size <page size in B> --num_cache_levels <number of levels of caches> --cache_level <details about cache level> --trace_file <path to trace file> --verbose true" << endl;
+            cerr << "Undefined flag. Usage: " << argv[0] << " --num_memory_levels <number of memory levels> --memory_level <details of memory level> --num_cache_levels <number of levels of caches> --cache_level <details about cache level> --address_translation <details about address translation> --trace_file <path to trace file> --verbose true" << endl;
             return -1;
         }        
     }
 
     vector<MemoryInfo> Memory_Infos = extract_memory_level_info(memory_info_string);
     vector<CacheInfo> Cache_Infos = extract_cache_level_info(cache_info_string);
+    AddressTranslationInfo Address_Translation_Info = extract_address_translation_info(address_translation_info_string);
     
     bool test_case_passed = true;
 
@@ -173,6 +205,13 @@ int main(int argc, char** argv)
         cout << "\tRead Latency (in cycles): " << Cache_Infos[level].read_latency << endl;
         cout << "\tWrite Latency (in cycles): " << Cache_Infos[level].write_latency << endl;
     }
+    cout << "Address Translation's Details" << endl;
+    cout << "\tNumber of Bits in Virtual Address: " << Address_Translation_Info.num_bits_virtual_address << endl;
+    cout << "\tNumber of Bits in Physical Address: " << Address_Translation_Info.num_bits_physical_address << endl;
+    cout << "\tNumber of Levels of Page Table: " << Address_Translation_Info.num_levels_page_table << endl;
+    cout << "\tPTE Size (B): " << Address_Translation_Info.PTE_size << endl;
+    cout << "\tTLB Size (B): " << Address_Translation_Info.TLB_size << endl;
+    cout << "\tMemory Allocation Policy: " << Address_Translation_Info.allocation_policy << endl;
     cout << "Trace Path: " << trace_file_path << endl;
     cout << "Verbose Mode: " << verbose << endl;
     cout << "=====================================================================" << endl;
@@ -188,7 +227,7 @@ int main(int argc, char** argv)
 
     vector<vector<string>> trace = read_trace_file(trace_file_path);
 
-    memory_subsystem* mem_subsys = new memory_subsystem(num_memory_levels, Memory_Infos, num_cache_levels, Cache_Infos, verbose);
+    memory_subsystem* mem_subsys = new memory_subsystem(num_memory_levels, Memory_Infos, num_cache_levels, Cache_Infos, Address_Translation_Info, verbose);
     
     for (size_t lines = 0; lines < trace.size(); lines++)
     {
@@ -222,6 +261,8 @@ int main(int argc, char** argv)
 
     mem_subsys->report_stats();
     cout << "Total Latency (in cycles): " << dec << mem_subsys->total_latency << endl;
+
+    delete mem_subsys;
     
     return 1;
 }
